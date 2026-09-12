@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Roles are stored as strings (SQLite has no native enums):
+// OWNER | MANAGER | DISPATCHER | UPDATER | DRIVER
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         String
+  phone        String?
+  // If this user is a driver, link to their Driver profile
+  driverId     String?  @unique
+  driver       Driver?  @relation(fields: [driverId], references: [id])
+  createdAt    DateTime @default(now())
+}
+
+// Driver status: AVAILABLE | ON_LOAD | OFF_DUTY
+model Driver {
+  id            String   @id @default(cuid())
+  name          String
+  phone         String?
+  truckNumber   String?
+  trailerNumber String?
+  licenseNumber String?
+  status        String   @default("AVAILABLE")
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  account User?
+  loads   Load[]
+}
+
+// Load status: NEW | ASSIGNED | IN_TRANSIT | DELIVERED | CANCELLED
+model Load {
+  id           String   @id @default(cuid())
+  refNumber    String   @unique
+  broker       String?
+  origin       String
+  destination  String
+  pickupDate   DateTime?
+  deliveryDate DateTime?
+  rate         Float?
+  miles        Int?
+  status       String   @default("NEW")
+  notes        String?
+
+  driverId     String?
+  driver       Driver?  @relation(fields: [driverId], references: [id])
+
+  dispatcherId String?
+  dispatcherName String?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  updates      LoadUpdate[]
+}
+
+model LoadUpdate {
+  id         String   @id @default(cuid())
+  loadId     String
+  load       Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  status     String?
+  location   String?
+  note       String?
+  authorId   String?
+  authorName String?
+  createdAt  DateTime @default(now())
+}

@@ -1,0 +1,90 @@
+import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { getSession } from "@/lib/auth";
+import { can } from "@/lib/constants";
+
+export async function GET(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const load = await prisma.load.findUnique({
+    where: { id: params.id },
+    include: { driver: true, updates: { orderBy: { createdAt: "desc" } } },
+  });
+  if (!load) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  if (session.role === "DRIVER" && load.driverId !== session.driverId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  return NextResponse.json({ load });
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const existing = await prisma.load.findUnique({ where: { id: params.id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const body = await req.json();
+
+  // Drivers may only change the status of their own load (via updates), not edit fields.
+  const isFullEditor = can.editLoad(session.role);
+  const data: any = {};
+
+  if (isFullEditor) {
+    if (body.refNumber !== undefined) data.refNumber = body.refNumber;
+    if (body.broker !== undefined) data.broker = body.broker || null;
+    if (body.origin !== undefined) data.origin = body.origin;
+    if (body.destination !== undefined) data.destination = body.destination;
+    if (body.pickupDate !== undefined)
+      data.pickupDate = body.pickupDate ? new Date(body.pickupDate) : null;
+    if (body.deliveryDate !== undefined)
+      data.deliveryDate = body.deliveryDate ? new Date(body.deliveryDate) : null;
+    if (body.rate !== undefined) data.rate = body.rate ? Number(body.rate) : null;
+    if (body.miles !== undefined) data.miles = body.miles ? Number(body.miles) : null;
+    if (body.notes !== undefined) data.notes = body.notes || null;
+    if (body.driverId !== undefined) data.driverId = body.driverId || null;
+  }
+
+  // Status can be changed by updaters/drivers too
+  if (body.status !== undefined && can.updateStatus(session.role)) {
+    if (session.role === "DRIVER" && existing.driverId !== session.driverId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+    data.status = body.status;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const load = await prisma.load.update({ where: { id: params.id }, data });
+    return NextResponse.json({ load });
+  } catch (e: any) {
+    if (e.code === "P2002")
+      return NextResponse.json({ error: "Ref # already exists" }, { status: 409 });
+    return NextResponse.json({ error: "Failed to update" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getSession();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!can.deleteLoad(session.role))
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  await prisma.load.delete({ where: { id: params.id } });
+  return NextResponse.json({ ok: true });
+}
