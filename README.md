@@ -22,18 +22,27 @@ Trilingual interface: **English / Русский / O'zbekcha** (switch in the to
 
 - [Next.js 14](https://nextjs.org/) (App Router) + TypeScript
 - [Tailwind CSS](https://tailwindcss.com/)
-- [Prisma](https://www.prisma.io/) ORM + SQLite (no external DB needed)
+- [Prisma](https://www.prisma.io/) ORM + **PostgreSQL**
+- Roles & statuses modeled as first-class Postgres enums
 - Cookie-based auth (JWT via `jose`), passwords hashed with `bcryptjs`
 
-## Getting started
+## Getting started (local)
+
+You need a PostgreSQL database. Copy `.env.example` to `.env` and set
+`DATABASE_URL` and `AUTH_SECRET`, then:
 
 ```bash
 npm install
-npm run setup   # creates the SQLite DB and loads demo data
+npm run setup   # pushes the schema and seeds demo data
 npm run dev     # http://localhost:3000
 ```
 
 Then open http://localhost:3000 and sign in with one of the demo accounts below.
+
+## Deploying
+
+See [DEPLOY.md](DEPLOY.md) for step-by-step Railway deployment (with managed
+PostgreSQL).
 
 ### Demo accounts
 
@@ -57,6 +66,6 @@ Then open http://localhost:3000 and sign in with one of the demo accounts below.
 
 ## Notes
 
-- `.env` holds `DATABASE_URL` and `AUTH_SECRET`. **Change `AUTH_SECRET` before
-  deploying to production.**
-- The SQLite database file (`prisma/dev.db`) is git-ignored.
+- `.env` holds `DATABASE_URL` (PostgreSQL) and `AUTH_SECRET`. **Change
+  `AUTH_SECRET` before deploying to production.**
+- The seed only runs when the database is empty, so redeploys never wipe data.

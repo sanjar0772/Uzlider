@@ -19,11 +19,12 @@ export async function GET(req: Request) {
   }
   if (status && status !== "ALL") where.status = status;
   if (q) {
+    const like = { contains: q, mode: "insensitive" as const };
     where.OR = [
-      { refNumber: { contains: q } },
-      { origin: { contains: q } },
-      { destination: { contains: q } },
-      { broker: { contains: q } },
+      { refNumber: like },
+      { origin: like },
+      { destination: like },
+      { broker: like },
     ];
   }
 

@@ -3,18 +3,40 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// Roles are stored as strings (SQLite has no native enums):
-// OWNER | MANAGER | DISPATCHER | UPDATER | DRIVER
+// ---- Roles & statuses as first-class enums ----
+
+enum Role {
+  OWNER // Rahbar — full access
+  MANAGER // Menejer — full access
+  DISPATCHER // Dispetcher — create/assign loads, manage drivers
+  UPDATER // Yangilovchi — post status updates
+  DRIVER // Haydovchi — sees only own loads
+}
+
+enum LoadStatus {
+  NEW
+  ASSIGNED
+  IN_TRANSIT
+  DELIVERED
+  CANCELLED
+}
+
+enum DriverStatus {
+  AVAILABLE
+  ON_LOAD
+  OFF_DUTY
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
   email        String   @unique
   passwordHash String
-  role         String
+  role         Role     @default(DISPATCHER)
   phone        String?
   // If this user is a driver, link to their Driver profile
   driverId     String?  @unique
@@ -22,56 +44,54 @@ model User {
   createdAt    DateTime @default(now())
 }
 
-// Driver status: AVAILABLE | ON_LOAD | OFF_DUTY
 model Driver {
-  id            String   @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String
   phone         String?
   truckNumber   String?
   trailerNumber String?
   licenseNumber String?
-  status        String   @default("AVAILABLE")
+  status        DriverStatus @default(AVAILABLE)
   notes         String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime     @default(now())
 
   account User?
   loads   Load[]
 }
 
-// Load status: NEW | ASSIGNED | IN_TRANSIT | DELIVERED | CANCELLED
 model Load {
-  id           String   @id @default(cuid())
-  refNumber    String   @unique
-  broker       String?
-  origin       String
-  destination  String
-  pickupDate   DateTime?
-  deliveryDate DateTime?
-  rate         Float?
-  miles        Int?
-  status       String   @default("NEW")
-  notes        String?
+  id             String     @id @default(cuid())
+  refNumber      String     @unique
+  broker         String?
+  origin         String
+  destination    String
+  pickupDate     DateTime?
+  deliveryDate   DateTime?
+  rate           Float?
+  miles          Int?
+  status         LoadStatus @default(NEW)
+  notes          String?
 
-  driverId     String?
-  driver       Driver?  @relation(fields: [driverId], references: [id])
+  driverId       String?
+  driver         Driver?    @relation(fields: [driverId], references: [id])
 
-  dispatcherId String?
+  dispatcherId   String?
   dispatcherName String?
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 
-  updates      LoadUpdate[]
+  updates        LoadUpdate[]
 }
 
 model LoadUpdate {
-  id         String   @id @default(cuid())
+  id         String      @id @default(cuid())
   loadId     String
-  load       Load     @relation(fields: [loadId], references: [id], onDelete: Cascade)
-  status     String?
+  load       Load        @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  status     LoadStatus?
   location   String?
   note       String?
   authorId   String?
   authorName String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime    @default(now())
 }

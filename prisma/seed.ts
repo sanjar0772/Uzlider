@@ -4,13 +4,13 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Seeding database...");
+  const existing = await prisma.user.count();
+  if (existing > 0) {
+    console.log(`Seed skipped — database already has ${existing} user(s).`);
+    return;
+  }
 
-  // Clean slate
-  await prisma.loadUpdate.deleteMany();
-  await prisma.load.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.driver.deleteMany();
+  console.log("Seeding database...");
 
   const hash = (pw: string) => bcrypt.hashSync(pw, 10);
 
@@ -46,7 +46,7 @@ async function main() {
     },
   });
 
-  // Users / accounts
+  // Users / accounts — one per role
   await prisma.user.create({
     data: {
       name: "Sanjar (Owner)",
