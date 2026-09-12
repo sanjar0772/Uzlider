@@ -2,6 +2,15 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can } from "@/lib/constants";
+import { notifyTelegram, escapeHtml } from "@/lib/telegram";
+
+const STATUS_LABEL: Record<string, string> = {
+  NEW: "🆕 Yangi",
+  ASSIGNED: "📋 Biriktirilgan",
+  IN_TRANSIT: "🚚 Yo'lda",
+  DELIVERED: "✅ Yetkazilgan",
+  CANCELLED: "❌ Bekor qilingan",
+};
 
 // Add a status update / note to a load. Optionally moves the load status.
 export async function POST(
@@ -39,6 +48,17 @@ export async function POST(
       where: { id: params.id },
       data: { status: body.status },
     });
+  }
+
+  // Notify Telegram (if configured) about the update.
+  if (body.status || body.location || body.note) {
+    void notifyTelegram(
+      `🔔 <b>${escapeHtml(load.refNumber)}</b> — ${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}\n` +
+        (body.status ? `${STATUS_LABEL[body.status] ?? escapeHtml(body.status)}\n` : "") +
+        (body.location ? `📍 ${escapeHtml(String(body.location))}\n` : "") +
+        (body.note ? `📝 ${escapeHtml(String(body.note))}\n` : "") +
+        `👤 ${escapeHtml(session.name)}`
+    );
   }
 
   return NextResponse.json({ update });

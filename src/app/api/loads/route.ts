@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
+import { notifyTelegram, escapeHtml } from "@/lib/telegram";
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -82,6 +83,12 @@ export async function POST(req: Request) {
       },
     });
     await logActivity(session, "created", "load", load.refNumber);
+    void notifyTelegram(
+      `📦 <b>Yangi yuk</b> ${escapeHtml(load.refNumber)}\n` +
+        `${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}\n` +
+        (load.rate ? `💵 $${load.rate.toLocaleString()}\n` : "") +
+        `👤 ${escapeHtml(session.name)}`
+    );
     return NextResponse.json({ load });
   } catch (e: any) {
     if (e.code === "P2002")

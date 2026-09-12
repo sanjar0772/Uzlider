@@ -17,6 +17,12 @@ export async function GET() {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const settings = await getOrCreate();
+  // Never expose the bot token to non-admins.
+  if (!can.manageUsers(session.role)) {
+    return NextResponse.json({
+      settings: { ...settings, telegramBotToken: settings.telegramBotToken ? "***" : null },
+    });
+  }
   return NextResponse.json({ settings });
 }
 
@@ -38,6 +44,12 @@ export async function PATCH(req: Request) {
   if (body.targetRpm !== undefined) data.targetRpm = Number(body.targetRpm);
   if (body.factoringRatePct !== undefined)
     data.factoringRatePct = Number(body.factoringRatePct);
+  if (body.telegramEnabled !== undefined)
+    data.telegramEnabled = Boolean(body.telegramEnabled);
+  if (body.telegramBotToken !== undefined)
+    data.telegramBotToken = body.telegramBotToken?.trim() || null;
+  if (body.telegramChatId !== undefined)
+    data.telegramChatId = body.telegramChatId?.trim() || null;
 
   const settings = await prisma.companySettings.update({
     where: { id: existing.id },
