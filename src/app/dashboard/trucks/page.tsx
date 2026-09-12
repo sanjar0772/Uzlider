@@ -11,7 +11,8 @@ import { PageHeader, EmptyState, Skeleton } from "@/components/ui";
 
 const empty = {
   unitNumber: "", plate: "", make: "", model: "", year: "",
-  vin: "", status: "ACTIVE", driverId: "", notes: "",
+  vin: "", status: "ACTIVE", driverId: "", odometer: "", mpg: "",
+  registrationExpiry: "", inspectionExpiry: "", insuranceExpiry: "", notes: "",
 };
 
 export default function TrucksPage() {
@@ -51,7 +52,12 @@ export default function TrucksPage() {
     setForm({
       unitNumber: x.unitNumber, plate: x.plate ?? "", make: x.make ?? "",
       model: x.model ?? "", year: x.year?.toString() ?? "", vin: x.vin ?? "",
-      status: x.status, driverId: x.driverId ?? "", notes: x.notes ?? "",
+      status: x.status, driverId: x.driverId ?? "",
+      odometer: x.odometer?.toString() ?? "", mpg: x.mpg?.toString() ?? "",
+      registrationExpiry: x.registrationExpiry ? x.registrationExpiry.slice(0, 10) : "",
+      inspectionExpiry: x.inspectionExpiry ? x.inspectionExpiry.slice(0, 10) : "",
+      insuranceExpiry: x.insuranceExpiry ? x.insuranceExpiry.slice(0, 10) : "",
+      notes: x.notes ?? "",
     });
     setError("");
     setFormOpen(true);
@@ -142,6 +148,13 @@ export default function TrucksPage() {
                   {TRUCK_STATUSES.map((s) => <option key={s} value={s}>{t(s)}</option>)}
                 </select>
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><label className="label">{t("odometer")}</label><input type="number" className="input" value={form.odometer} onChange={(e) => setForm({ ...form, odometer: e.target.value })} /></div>
+              <div><label className="label">{t("mpg")}</label><input type="number" step="0.1" className="input" value={form.mpg} onChange={(e) => setForm({ ...form, mpg: e.target.value })} placeholder="6.5" /></div>
+              <div><label className="label">{t("registration")}</label><input type="date" className="input" value={form.registrationExpiry} onChange={(e) => setForm({ ...form, registrationExpiry: e.target.value })} /></div>
+              <div><label className="label">{t("inspection")}</label><input type="date" className="input" value={form.inspectionExpiry} onChange={(e) => setForm({ ...form, inspectionExpiry: e.target.value })} /></div>
+              <div><label className="label">{t("insurance")}</label><input type="date" className="input" value={form.insuranceExpiry} onChange={(e) => setForm({ ...form, insuranceExpiry: e.target.value })} /></div>
             </div>
             <div><label className="label">{t("vin")}</label><input className="input" value={form.vin} onChange={(e) => setForm({ ...form, vin: e.target.value })} /></div>
             <div><label className="label">{t("assignedDriver")}</label>

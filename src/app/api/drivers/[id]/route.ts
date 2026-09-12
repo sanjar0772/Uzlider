@@ -28,9 +28,18 @@ export async function PATCH(
       data.trailerNumber = body.trailerNumber || null;
     if (body.licenseNumber !== undefined)
       data.licenseNumber = body.licenseNumber || null;
+    if (body.cdlExpiry !== undefined)
+      data.cdlExpiry = body.cdlExpiry ? new Date(body.cdlExpiry) : null;
+    if (body.medicalExpiry !== undefined)
+      data.medicalExpiry = body.medicalExpiry ? new Date(body.medicalExpiry) : null;
+    if (body.hireDate !== undefined)
+      data.hireDate = body.hireDate ? new Date(body.hireDate) : null;
+    if (body.homeBase !== undefined) data.homeBase = body.homeBase || null;
     if (body.notes !== undefined) data.notes = body.notes || null;
   }
   if (body.status !== undefined) data.status = body.status;
+  if (body.availableHours !== undefined && body.availableHours !== "")
+    data.availableHours = Number(body.availableHours);
 
   const driver = await prisma.driver.update({ where: { id: params.id }, data });
   await logActivity(session, "updated", "driver", driver.name);

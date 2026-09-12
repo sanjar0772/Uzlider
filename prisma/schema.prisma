@@ -76,6 +76,12 @@ model Driver {
   licenseNumber String?
   status        DriverStatus @default(AVAILABLE)
   notes         String?
+  // Compliance & HOS
+  cdlExpiry      DateTime?
+  medicalExpiry  DateTime?
+  hireDate       DateTime?
+  availableHours Float?    @default(70) // HOS cycle hours remaining (simplified)
+  homeBase       String?
   createdAt     DateTime     @default(now())
 
   account User?
@@ -93,6 +99,12 @@ model Truck {
   vin          String?
   status       TruckStatus @default(ACTIVE)
   notes        String?
+  // Fuel & compliance
+  odometer            Int?
+  mpg                 Float?
+  registrationExpiry  DateTime?
+  inspectionExpiry    DateTime?
+  insuranceExpiry     DateTime?
   createdAt    DateTime    @default(now())
 
   driverId     String?     @unique
@@ -126,6 +138,10 @@ model Load {
   rate           Float?
   driverPay      Float?
   miles          Int?
+  deadheadMiles  Int?
+  detention      Float?
+  lumperFee      Float?
+  otherCharges   Float?
   weight         Int?
   commodity      String?
   equipment      EquipmentType @default(VAN)
@@ -173,9 +189,22 @@ model Invoice {
   issuedAt    DateTime?
   dueAt       DateTime?
   paidAt      DateTime?
+  factored    Boolean       @default(false)
   notes       String?
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+}
+
+// Company-wide cost assumptions used to compute per-load profit.
+model CompanySettings {
+  id                String   @id @default(cuid())
+  companyName       String   @default("Uzlider Trucking")
+  mpg               Float    @default(6.5)
+  fuelPricePerGallon Float   @default(4.10)
+  fixedCostPerMile  Float    @default(0.35)
+  targetRpm         Float    @default(2.00)
+  factoringRatePct  Float    @default(3.0)
+  updatedAt         DateTime @updatedAt @default(now())
 }
 
 model Activity {

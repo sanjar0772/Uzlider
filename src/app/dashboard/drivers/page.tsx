@@ -11,7 +11,8 @@ import { PageHeader, EmptyState, Skeleton } from "@/components/ui";
 
 const empty = {
   name: "", phone: "", email: "", truckNumber: "", trailerNumber: "",
-  licenseNumber: "", status: "AVAILABLE", notes: "",
+  licenseNumber: "", status: "AVAILABLE", availableHours: "70",
+  cdlExpiry: "", medicalExpiry: "", hireDate: "", homeBase: "", notes: "",
 };
 
 export default function DriversPage() {
@@ -47,7 +48,12 @@ export default function DriversPage() {
     setForm({
       name: d.name, phone: d.phone ?? "", email: d.email ?? "",
       truckNumber: d.truckNumber ?? "", trailerNumber: d.trailerNumber ?? "",
-      licenseNumber: d.licenseNumber ?? "", status: d.status, notes: d.notes ?? "",
+      licenseNumber: d.licenseNumber ?? "", status: d.status,
+      availableHours: d.availableHours?.toString() ?? "70",
+      cdlExpiry: d.cdlExpiry ? d.cdlExpiry.slice(0, 10) : "",
+      medicalExpiry: d.medicalExpiry ? d.medicalExpiry.slice(0, 10) : "",
+      hireDate: d.hireDate ? d.hireDate.slice(0, 10) : "",
+      homeBase: d.homeBase ?? "", notes: d.notes ?? "",
     });
     setFormOpen(true);
   }
@@ -112,6 +118,12 @@ export default function DriversPage() {
 
               <div className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-300">
                 {d.truck && <div className="flex items-center gap-1.5"><TruckIcon size={13} className="text-slate-400" /> {d.truck.unitNumber}</div>}
+                {d.availableHours != null && (
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="text-slate-400">HOS:</span>
+                    <span className={`font-semibold tabular-nums ${d.availableHours < 15 ? "text-red-500" : d.availableHours < 30 ? "text-amber-500" : "text-emerald-600 dark:text-emerald-400"}`}>{d.availableHours} {t("hours")}</span>
+                  </div>
+                )}
                 {d.licenseNumber && <div className="text-xs text-slate-400">{t("licenseNumber")}: {d.licenseNumber}</div>}
                 {d._count && <div className="text-xs text-slate-400">{t("loads")}: {d._count.loads}</div>}
               </div>
@@ -147,6 +159,11 @@ export default function DriversPage() {
                 </select>
               </div>
               <div><label className="label">{t("licenseNumber")}</label><input className="input" value={form.licenseNumber} onChange={(e) => setForm({ ...form, licenseNumber: e.target.value })} /></div>
+              <div><label className="label">{t("availableHours")}</label><input type="number" step="0.5" className="input" value={form.availableHours} onChange={(e) => setForm({ ...form, availableHours: e.target.value })} /></div>
+              <div><label className="label">{t("homeBase")}</label><input className="input" value={form.homeBase} onChange={(e) => setForm({ ...form, homeBase: e.target.value })} placeholder="Chicago, IL" /></div>
+              <div><label className="label">{t("cdlExpiry")}</label><input type="date" className="input" value={form.cdlExpiry} onChange={(e) => setForm({ ...form, cdlExpiry: e.target.value })} /></div>
+              <div><label className="label">{t("medicalExpiry")}</label><input type="date" className="input" value={form.medicalExpiry} onChange={(e) => setForm({ ...form, medicalExpiry: e.target.value })} /></div>
+              <div><label className="label">{t("hireDate")}</label><input type="date" className="input" value={form.hireDate} onChange={(e) => setForm({ ...form, hireDate: e.target.value })} /></div>
             </div>
             <div><label className="label">{t("notes")}</label><textarea className="input" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <div className="flex justify-end gap-2">

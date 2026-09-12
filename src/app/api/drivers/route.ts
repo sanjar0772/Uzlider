@@ -36,6 +36,14 @@ export async function POST(req: Request) {
       trailerNumber: body.trailerNumber || null,
       licenseNumber: body.licenseNumber || null,
       status: body.status || "AVAILABLE",
+      cdlExpiry: body.cdlExpiry ? new Date(body.cdlExpiry) : null,
+      medicalExpiry: body.medicalExpiry ? new Date(body.medicalExpiry) : null,
+      hireDate: body.hireDate ? new Date(body.hireDate) : null,
+      availableHours:
+        body.availableHours !== undefined && body.availableHours !== ""
+          ? Number(body.availableHours)
+          : 70,
+      homeBase: body.homeBase || null,
       notes: body.notes || null,
     },
   });

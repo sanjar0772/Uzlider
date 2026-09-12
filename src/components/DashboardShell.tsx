@@ -19,6 +19,8 @@ import {
   Menu,
   Moon,
   Sun,
+  ShieldCheck,
+  SlidersHorizontal,
   type LucideIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -56,10 +58,12 @@ export default function DashboardShell({
     { href: "/dashboard/loads", label: t("loads"), icon: Package, show: true, group: "operations" },
     { href: "/dashboard/drivers", label: t("drivers"), icon: Users, show: staff, group: "fleet" },
     { href: "/dashboard/trucks", label: t("trucks"), icon: Truck, show: staff, group: "fleet" },
+    { href: "/dashboard/compliance", label: t("compliance"), icon: ShieldCheck, show: staff, group: "fleet" },
     { href: "/dashboard/customers", label: t("customers"), icon: Building2, show: staff, group: "finance" },
     { href: "/dashboard/invoices", label: t("invoices"), icon: FileText, show: can.viewInvoices(user.role), group: "finance" },
     { href: "/dashboard/reports", label: t("reports"), icon: BarChart3, show: can.viewReports(user.role), group: "finance" },
     { href: "/dashboard/users", label: t("users"), icon: UserCog, show: can.manageUsers(user.role), group: "admin" },
+    { href: "/dashboard/settings", label: t("settings"), icon: SlidersHorizontal, show: can.manageUsers(user.role), group: "admin" },
     { href: "/dashboard/activity", label: t("activity"), icon: History, show: can.viewActivity(user.role), group: "admin" },
     { href: "/dashboard/profile", label: t("profile"), icon: UserCircle, show: true, group: "admin" },
   ].filter((n) => n.show);

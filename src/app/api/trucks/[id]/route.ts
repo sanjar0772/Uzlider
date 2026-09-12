@@ -22,6 +22,14 @@ export async function PATCH(
   if (body.year !== undefined) data.year = body.year ? Number(body.year) : null;
   if (body.vin !== undefined) data.vin = body.vin || null;
   if (body.status !== undefined) data.status = body.status;
+  if (body.odometer !== undefined) data.odometer = body.odometer ? Number(body.odometer) : null;
+  if (body.mpg !== undefined) data.mpg = body.mpg ? Number(body.mpg) : null;
+  if (body.registrationExpiry !== undefined)
+    data.registrationExpiry = body.registrationExpiry ? new Date(body.registrationExpiry) : null;
+  if (body.inspectionExpiry !== undefined)
+    data.inspectionExpiry = body.inspectionExpiry ? new Date(body.inspectionExpiry) : null;
+  if (body.insuranceExpiry !== undefined)
+    data.insuranceExpiry = body.insuranceExpiry ? new Date(body.insuranceExpiry) : null;
   if (body.notes !== undefined) data.notes = body.notes || null;
   if (body.driverId !== undefined) data.driverId = body.driverId || null;
 

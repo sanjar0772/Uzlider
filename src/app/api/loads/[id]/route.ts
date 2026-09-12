@@ -57,6 +57,14 @@ export async function PATCH(
     if (body.driverPay !== undefined)
       data.driverPay = body.driverPay ? Number(body.driverPay) : null;
     if (body.miles !== undefined) data.miles = body.miles ? Number(body.miles) : null;
+    if (body.deadheadMiles !== undefined)
+      data.deadheadMiles = body.deadheadMiles ? Number(body.deadheadMiles) : null;
+    if (body.detention !== undefined)
+      data.detention = body.detention ? Number(body.detention) : null;
+    if (body.lumperFee !== undefined)
+      data.lumperFee = body.lumperFee ? Number(body.lumperFee) : null;
+    if (body.otherCharges !== undefined)
+      data.otherCharges = body.otherCharges ? Number(body.otherCharges) : null;
     if (body.weight !== undefined)
       data.weight = body.weight ? Number(body.weight) : null;
     if (body.commodity !== undefined) data.commodity = body.commodity || null;

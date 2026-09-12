@@ -11,13 +11,15 @@ import {
   LOAD_STATUS_COLORS,
   EQUIPMENT_TYPES,
 } from "@/lib/constants";
-import { money, fmtDate, fmtDateTime, ratePerMile } from "@/lib/format";
+import { money, money2, fmtDate, fmtDateTime } from "@/lib/format";
+import { computePnl, rpmBg, DEFAULT_SETTINGS, CostSettings } from "@/lib/finance";
 import Modal from "@/components/Modal";
 import { PageHeader, TableSkeleton, EmptyState } from "@/components/ui";
 
 const empty = {
   refNumber: "", origin: "", destination: "", pickupDate: "", deliveryDate: "",
-  rate: "", driverPay: "", miles: "", weight: "", commodity: "", equipment: "VAN",
+  rate: "", driverPay: "", miles: "", deadheadMiles: "", detention: "", lumperFee: "",
+  otherCharges: "", weight: "", commodity: "", equipment: "VAN",
   status: "NEW", customerId: "", driverId: "", truckId: "", notes: "",
 };
 
@@ -30,6 +32,7 @@ export default function LoadsPage() {
   const [drivers, setDrivers] = useState<any[]>([]);
   const [trucks, setTrucks] = useState<any[]>([]);
   const [customers, setCustomers] = useState<any[]>([]);
+  const [settings, setSettings] = useState<CostSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -56,14 +59,16 @@ export default function LoadsPage() {
       const me = await fetch("/api/auth/me").then((r) => r.json());
       setRole(me.user?.role ?? "");
       if (me.user?.role !== "DRIVER") {
-        const [dr, tr, cu] = await Promise.all([
+        const [dr, tr, cu, st] = await Promise.all([
           fetch("/api/drivers").then((r) => r.json()),
           fetch("/api/trucks").then((r) => r.json()),
           fetch("/api/customers").then((r) => r.json()),
+          fetch("/api/settings").then((r) => r.json()),
         ]);
         setDrivers(dr.drivers ?? []);
         setTrucks(tr.trucks ?? []);
         setCustomers(cu.customers ?? []);
+        if (st.settings) setSettings(st.settings);
       }
     })();
   }, []);
@@ -92,7 +97,10 @@ export default function LoadsPage() {
       pickupDate: l.pickupDate ? l.pickupDate.slice(0, 10) : "",
       deliveryDate: l.deliveryDate ? l.deliveryDate.slice(0, 10) : "",
       rate: l.rate?.toString() ?? "", driverPay: l.driverPay?.toString() ?? "",
-      miles: l.miles?.toString() ?? "", weight: l.weight?.toString() ?? "",
+      miles: l.miles?.toString() ?? "", deadheadMiles: l.deadheadMiles?.toString() ?? "",
+      detention: l.detention?.toString() ?? "", lumperFee: l.lumperFee?.toString() ?? "",
+      otherCharges: l.otherCharges?.toString() ?? "",
+      weight: l.weight?.toString() ?? "",
       commodity: l.commodity ?? "", equipment: l.equipment ?? "VAN",
       status: l.status, customerId: l.customerId ?? "", driverId: l.driverId ?? "",
       truckId: l.truckId ?? "", notes: l.notes ?? "",
@@ -184,8 +192,14 @@ export default function LoadsPage() {
                   <td className="td">{l.driver?.name ?? <span className="text-slate-400">{t("unassigned")}</span>}</td>
                   {showFin && (
                     <td className="td">
-                      <div className="font-medium">{money(l.rate)}</div>
-                      <div className="text-xs text-slate-400">{ratePerMile(l.rate, l.miles)}/mi</div>
+                      <div className="font-medium tabular-nums">{money(l.rate)}</div>
+                      {l.rate && l.miles ? (
+                        <span className={`badge mt-0.5 ${rpmBg(l.rate / l.miles, settings.targetRpm)}`}>
+                          ${(l.rate / l.miles).toFixed(2)}{t("perMile")}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-400">—</span>
+                      )}
                     </td>
                   )}
                   <td className="td"><span className={`badge ${LOAD_STATUS_COLORS[l.status]}`}>{t(l.status)}</span></td>
@@ -224,6 +238,10 @@ export default function LoadsPage() {
               <Field label={`${t("rate")} ($)`}><input type="number" className="input" value={form.rate} onChange={(e) => setForm({ ...form, rate: e.target.value })} /></Field>
               <Field label={`${t("driverPay")} ($)`}><input type="number" className="input" value={form.driverPay} onChange={(e) => setForm({ ...form, driverPay: e.target.value })} /></Field>
               <Field label={t("miles")}><input type="number" className="input" value={form.miles} onChange={(e) => setForm({ ...form, miles: e.target.value })} /></Field>
+              <Field label={t("deadheadMiles")}><input type="number" className="input" value={form.deadheadMiles} onChange={(e) => setForm({ ...form, deadheadMiles: e.target.value })} /></Field>
+              <Field label={`${t("detention")} ($)`}><input type="number" className="input" value={form.detention} onChange={(e) => setForm({ ...form, detention: e.target.value })} /></Field>
+              <Field label={`${t("lumper")} ($)`}><input type="number" className="input" value={form.lumperFee} onChange={(e) => setForm({ ...form, lumperFee: e.target.value })} /></Field>
+              <Field label={`${t("otherCharges")} ($)`}><input type="number" className="input" value={form.otherCharges} onChange={(e) => setForm({ ...form, otherCharges: e.target.value })} /></Field>
               <Field label={t("weight")}><input type="number" className="input" value={form.weight} onChange={(e) => setForm({ ...form, weight: e.target.value })} /></Field>
               <Field label={t("commodity")}><input className="input" value={form.commodity} onChange={(e) => setForm({ ...form, commodity: e.target.value })} /></Field>
               <Field label={t("equipment")}>
@@ -273,11 +291,11 @@ export default function LoadsPage() {
             <Info label={t("driver")} value={viewFor.driver?.name ?? t("unassigned")} />
             <Info label={t("truck")} value={viewFor.truck?.unitNumber ?? "—"} />
             <Info label={t("miles")} value={viewFor.miles ?? "—"} />
-            {showFin && <Info label={t("rate")} value={money(viewFor.rate)} />}
-            {showFin && <Info label={t("driverPay")} value={money(viewFor.driverPay)} />}
-            {showFin && <Info label={t("margin")} value={money((viewFor.rate ?? 0) - (viewFor.driverPay ?? 0))} />}
+            <Info label={t("deadhead")} value={viewFor.deadheadMiles ?? "—"} />
             {viewFor.notes && <div className="col-span-2 sm:col-span-3"><Info label={t("notes")} value={viewFor.notes} /></div>}
           </div>
+
+          {showFin && <PnlCard load={viewFor} settings={settings} t={t} />}
           <h4 className="mb-2 text-sm font-semibold text-slate-900 dark:text-white">{t("updates")}</h4>
           <div className="space-y-2">
             {history.length === 0 && <p className="text-sm text-slate-400">{t("noData")}</p>}
@@ -306,6 +324,38 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 function Info({ label, value }: { label: string; value: any }) {
   return <div><div className="text-xs uppercase text-slate-400">{label}</div><div className="font-medium text-slate-900 dark:text-white">{value}</div></div>;
+}
+
+function PnlCard({ load, settings, t }: { load: any; settings: CostSettings; t: (k: string) => string }) {
+  const p = computePnl(load, settings, load.truck?.mpg ?? null);
+  const Row = ({ label, value, sign, strong }: any) => (
+    <div className="flex items-center justify-between py-1 text-sm">
+      <span className={strong ? "font-semibold text-slate-900 dark:text-white" : "text-slate-500"}>{label}</span>
+      <span className={`tabular-nums ${strong ? "font-bold" : ""} ${sign === "-" ? "text-red-500" : sign === "+" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-700 dark:text-slate-200"}`}>
+        {sign === "-" ? "−" : sign === "+" ? "+" : ""}{money2(Math.abs(value))}
+      </span>
+    </div>
+  );
+  return (
+    <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-700 dark:bg-slate-800/40">
+      <div className="mb-2 flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-slate-900 dark:text-white">{t("pnl")}</h4>
+        <div className="flex gap-2">
+          <span className={`badge ${rpmBg(p.loadedRpm, settings.targetRpm)}`}>{t("loadedRpm")} ${p.loadedRpm.toFixed(2)}</span>
+          {p.allInRpm > 0 && p.allInRpm !== p.loadedRpm && (
+            <span className={`badge ${rpmBg(p.allInRpm, settings.targetRpm)}`}>{t("allInRpm")} ${p.allInRpm.toFixed(2)}</span>
+          )}
+        </div>
+      </div>
+      <Row label={t("grossRevenue")} value={p.revenue} sign="+" />
+      <Row label={t("driverPayTotal")} value={p.driverPay} sign="-" />
+      <Row label={`${t("fuelCost")} (${t("est")})`} value={p.fuelCost} sign="-" />
+      <Row label={t("fixedCost")} value={p.fixedCost} sign="-" />
+      {p.lumper > 0 && <Row label={t("lumper")} value={p.lumper} sign="-" />}
+      <div className="my-1 border-t border-slate-200 dark:border-slate-700" />
+      <Row label={`${t("netProfit")} (${p.marginPct.toFixed(0)}% ${t("margin").toLowerCase()})`} value={p.netProfit} strong sign={p.netProfit >= 0 ? "+" : "-"} />
+    </div>
+  );
 }
 
 function UpdateModal({ load, onClose, onSaved }: any) {
