@@ -68,6 +68,48 @@ export default function ReportsPage() {
         <StatCard label={t("fuelCost")} value={money(f.fuelCost)} icon={Wallet} accent="amber" />
       </div>
 
+      {/* Efficiency + cost breakdown */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="card p-4">
+          <div className="text-sm text-slate-500 dark:text-slate-400">{t("deadhead")} %</div>
+          <div className={`mt-1 text-2xl font-bold tabular-nums ${(f.deadheadPct ?? 0) > 15 ? "text-red-500" : "text-emerald-600 dark:text-emerald-400"}`}>{f.deadheadPct ?? 0}%</div>
+          <div className="mt-2 h-2 rounded-full bg-slate-100 dark:bg-slate-800">
+            <div className={`h-2 rounded-full ${(f.deadheadPct ?? 0) > 15 ? "bg-red-500" : "bg-emerald-500"}`} style={{ width: `${Math.min(f.deadheadPct ?? 0, 100)}%` }} />
+          </div>
+        </div>
+        <div className="card p-4">
+          <div className="text-sm text-slate-500 dark:text-slate-400">Cost {t("perMile")}</div>
+          <div className="mt-1 text-2xl font-bold tabular-nums text-slate-900 dark:text-white">${(f.costPerMile ?? 0).toFixed(2)}</div>
+          <div className="mt-1 text-xs text-slate-400">{t("totalMiles")}: {(f.totalMiles ?? 0).toLocaleString()}</div>
+        </div>
+        <div className="card p-4">
+          <div className="mb-2 text-sm text-slate-500 dark:text-slate-400">{t("costs")}</div>
+          {(() => {
+            const parts = [
+              { label: t("driverPayTotal"), v: f.driverCost ?? 0, c: "bg-brand-500" },
+              { label: t("fuelCost"), v: f.fuelCost ?? 0, c: "bg-amber-500" },
+              { label: t("fixedCost"), v: f.fixedCost ?? 0, c: "bg-slate-400" },
+            ];
+            const tot = parts.reduce((s, p) => s + p.v, 0) || 1;
+            return (
+              <>
+                <div className="flex h-3 overflow-hidden rounded-full">
+                  {parts.map((p, i) => <div key={i} className={p.c} style={{ width: `${(p.v / tot) * 100}%` }} />)}
+                </div>
+                <div className="mt-2 space-y-0.5">
+                  {parts.map((p, i) => (
+                    <div key={i} className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1.5 text-slate-500"><span className={`h-2 w-2 rounded-sm ${p.c}`} />{p.label}</span>
+                      <span className="tabular-nums text-slate-700 dark:text-slate-300">{money(p.v)}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="card p-5 lg:col-span-2">
           <h2 className="mb-4 font-semibold text-slate-900 dark:text-white">{t("profitByMonth")}</h2>

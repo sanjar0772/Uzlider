@@ -28,6 +28,9 @@ import { useTheme } from "@/lib/theme";
 import { can, ROLE_COLORS } from "@/lib/constants";
 import type { SessionUser } from "@/lib/auth";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import CommandPalette from "@/components/CommandPalette";
+import Notifications from "@/components/Notifications";
+import { Search } from "lucide-react";
 
 type NavItem = {
   href: string;
@@ -178,11 +181,16 @@ export default function DashboardShell({
             >
               <Menu size={20} />
             </button>
-            <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              {t("welcome")}, {user.name.split(" ")[0]} 👋
-            </span>
+            <button
+              onClick={() => window.dispatchEvent(new Event("uzlider-cmdk"))}
+              className="hidden items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-50 sm:flex dark:border-slate-700 dark:hover:bg-slate-800"
+            >
+              <Search size={15} /> {t("search")}
+              <kbd className="rounded border border-slate-200 px-1 text-[10px] dark:border-slate-600">⌘K</kbd>
+            </button>
           </div>
           <div className="flex items-center gap-2">
+            {staff && <Notifications />}
             <button
               onClick={toggle}
               className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -203,6 +211,8 @@ export default function DashboardShell({
 
         <main className="mx-auto max-w-7xl p-4 md:p-6">{children}</main>
       </div>
+
+      <CommandPalette staff={staff} />
     </div>
   );
 }

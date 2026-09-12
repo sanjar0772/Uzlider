@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import {
   Package, Rocket, CheckCircle2, UserCheck, DollarSign, TrendingUp,
   Truck as TruckIcon, AlertTriangle, MapPin, Trophy, Gauge, Fuel, ShieldCheck, Wallet,
@@ -13,6 +14,11 @@ import { money, fmtDate } from "@/lib/format";
 import { rpmBg } from "@/lib/finance";
 import { StatCard, Skeleton } from "@/components/ui";
 import { BarChart, DonutChart } from "@/components/Charts";
+
+const LoadMap = dynamic(() => import("@/components/LoadMap"), {
+  ssr: false,
+  loading: () => <div className="skeleton h-[300px] rounded-xl" />,
+});
 
 export default function DashboardPage() {
   const { t } = useI18n();
@@ -103,6 +109,11 @@ function StaffDashboard({ data, t }: any) {
           <h2 className="mb-4 font-semibold text-slate-900 dark:text-white">{t("loadsByStatus")}</h2>
           {donutData.length > 0 ? <DonutChart data={donutData} labelFor={(k) => t(k)} /> : <p className="text-sm text-slate-400">{t("noData")}</p>}
         </div>
+      </div>
+
+      {/* Live loads map */}
+      <div className="card overflow-hidden p-1.5">
+        <LoadMap loads={(data.recent ?? []).filter((l: any) => l.status !== "CANCELLED")} height={300} />
       </div>
 
       {/* Lists */}

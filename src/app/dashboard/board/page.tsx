@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { Columns3, GanttChartSquare } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
 import { can, LOAD_STATUS_COLORS } from "@/lib/constants";
 import { money } from "@/lib/format";
 import { PageHeader, Skeleton } from "@/components/ui";
+import DispatchTimeline from "@/components/DispatchTimeline";
 
 const COLUMNS = ["NEW", "ASSIGNED", "IN_TRANSIT", "DELIVERED"] as const;
 
@@ -16,6 +18,7 @@ export default function BoardPage() {
   const [loads, setLoads] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"board" | "timeline">("board");
 
   const load = useCallback(async () => {
     const res = await fetch("/api/loads").then((r) => r.json());
@@ -57,12 +60,19 @@ export default function BoardPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t("dispatchBoard")} subtitle={`${loads.length} ${t("loads").toLowerCase()}`} />
+      <PageHeader title={t("dispatchBoard")} subtitle={`${loads.length} ${t("loads").toLowerCase()}`}>
+        <div className="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
+          <button onClick={() => setView("board")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm ${view === "board" ? "bg-brand-600 text-white" : "text-slate-600 dark:text-slate-300"}`}><Columns3 size={15} /> {t("dispatchBoard")}</button>
+          <button onClick={() => setView("timeline")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm ${view === "timeline" ? "bg-brand-600 text-white" : "text-slate-600 dark:text-slate-300"}`}><GanttChartSquare size={15} /> Timeline</button>
+        </div>
+      </PageHeader>
 
       {loading ? (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {COLUMNS.map((c) => <Skeleton key={c} className="h-64" />)}
         </div>
+      ) : view === "timeline" ? (
+        <DispatchTimeline loads={loads} drivers={drivers} />
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
           {COLUMNS.map((col) => {

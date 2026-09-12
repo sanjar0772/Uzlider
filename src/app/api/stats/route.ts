@@ -81,6 +81,8 @@ export async function GET() {
     driverCost = 0,
     netProfit = 0,
     totalMiles = 0,
+    loadedMiles = 0,
+    deadMiles = 0,
     rpmSum = 0,
     rpmCount = 0;
   for (const l of nonCancelled) {
@@ -91,12 +93,16 @@ export async function GET() {
     driverCost += p.driverPay;
     netProfit += p.netProfit;
     totalMiles += p.totalMiles;
+    loadedMiles += l.miles ?? 0;
+    deadMiles += l.deadheadMiles ?? 0;
     if (p.loadedRpm > 0) {
       rpmSum += p.loadedRpm;
       rpmCount++;
     }
   }
   const avgRpm = rpmCount ? rpmSum / rpmCount : 0;
+  const deadheadPct = loadedMiles + deadMiles > 0 ? (deadMiles / (loadedMiles + deadMiles)) * 100 : 0;
+  const costPerMile = totalMiles > 0 ? (driverCost + fuelCost + fixedCost) / totalMiles : 0;
 
   // Loads by status
   const byStatus: Record<string, number> = {};
@@ -191,6 +197,8 @@ export async function GET() {
       avgRpm: Number(avgRpm.toFixed(2)),
       targetRpm: settings.targetRpm,
       totalMiles: Math.round(totalMiles),
+      deadheadPct: Math.round(deadheadPct),
+      costPerMile: Number(costPerMile.toFixed(2)),
       outstanding: Math.round(outstanding),
       paidTotal: Math.round(paidTotal),
       unpaidCount: unpaidInvoices.length,

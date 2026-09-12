@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Plus, Search, Eye, RefreshCw, Pencil, Trash2, Package } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
@@ -205,7 +206,7 @@ export default function LoadsPage() {
                   <td className="td"><span className={`badge ${LOAD_STATUS_COLORS[l.status]}`}>{t(l.status)}</span></td>
                   <td className="td">
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => openView(l)} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" title={t("view")}><Eye size={15} /></button>
+                      <Link href={`/dashboard/loads/${l.id}`} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" title={t("view")}><Eye size={15} /></Link>
                       {canUpdate && <button onClick={() => setUpdateFor(l)} className="rounded p-1.5 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-500/10" title={t("addUpdate")}><RefreshCw size={15} /></button>}
                       {canEdit && <button onClick={() => openEdit(l)} className="rounded p-1.5 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10" title={t("edit")}><Pencil size={15} /></button>}
                       {canDelete && <button onClick={() => remove(l)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10" title={t("delete")}><Trash2 size={15} /></button>}
