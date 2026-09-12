@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can, ROLES } from "@/lib/constants";
+import { can, ROLES, ROLE_RANK } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
 
 export async function GET() {
@@ -39,6 +39,17 @@ export async function POST(req: Request) {
   }
   if (!ROLES.includes(body.role)) {
     return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+  }
+  // Prevent privilege escalation: no one may create an account whose role
+  // outranks their own (e.g. a Manager minting an Owner).
+  if (ROLE_RANK[body.role] > ROLE_RANK[session.role]) {
+    return NextResponse.json(
+      { error: "Cannot assign a role above your own" },
+      { status: 403 }
+    );
+  }
+  if (typeof body.password !== "string" || body.password.length < 6) {
+    return NextResponse.json({ error: "Password too short" }, { status: 400 });
   }
 
   try {

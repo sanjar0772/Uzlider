@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isLoadStatus } from "@/lib/constants";
+import { logActivity } from "@/lib/activity";
+import { notifyLoadStatus } from "@/lib/telegram";
 
 // Add a status update / note to a load. Optionally moves the load status.
 export async function POST(
@@ -21,6 +23,8 @@ export async function POST(
   }
 
   const body = await req.json();
+  if (body.status && !isLoadStatus(body.status))
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
   const update = await prisma.loadUpdate.create({
     data: {
@@ -34,11 +38,15 @@ export async function POST(
   });
 
   // If a status was supplied, also move the load status.
-  if (body.status) {
-    await prisma.load.update({
+  if (body.status && body.status !== load.status) {
+    const updated = await prisma.load.update({
       where: { id: params.id },
       data: { status: body.status },
     });
+    await logActivity(session, "status_changed", "load", load.refNumber, `→ ${body.status}`);
+    notifyLoadStatus(updated, body.status, session.name, body.location || body.note || null).catch(
+      () => {}
+    );
   }
 
   return NextResponse.json({ update });

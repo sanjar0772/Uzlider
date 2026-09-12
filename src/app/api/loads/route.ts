@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isLoadStatus, isEquipmentType } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
+import { notifyNewLoad } from "@/lib/telegram";
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -52,6 +53,10 @@ export async function POST(req: Request) {
   if (!body.refNumber || !body.origin || !body.destination) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
+  if (body.status && !isLoadStatus(body.status))
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  if (body.equipment && !isEquipmentType(body.equipment))
+    return NextResponse.json({ error: "Invalid equipment" }, { status: 400 });
 
   try {
     const load = await prisma.load.create({
@@ -82,6 +87,7 @@ export async function POST(req: Request) {
       },
     });
     await logActivity(session, "created", "load", load.refNumber);
+    notifyNewLoad(load, session.name).catch(() => {});
     return NextResponse.json({ load });
   } catch (e: any) {
     if (e.code === "P2002")

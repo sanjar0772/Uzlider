@@ -2,9 +2,16 @@ import { cookies } from "next/headers";
 import { SignJWT, jwtVerify } from "jose";
 
 const COOKIE_NAME = "uzlider_session";
-const secret = new TextEncoder().encode(
-  process.env.AUTH_SECRET || "dev-secret-please-change"
-);
+
+const rawSecret = process.env.AUTH_SECRET;
+// In production a real secret is mandatory: a known default would let anyone
+// forge a session cookie (including an OWNER session). Fail fast instead.
+if (process.env.NODE_ENV === "production" && (!rawSecret || rawSecret.length < 16)) {
+  throw new Error(
+    "AUTH_SECRET is missing or too short. Set a long random AUTH_SECRET in the environment."
+  );
+}
+const secret = new TextEncoder().encode(rawSecret || "dev-secret-please-change");
 
 export type SessionUser = {
   id: string;

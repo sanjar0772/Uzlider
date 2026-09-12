@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isDriverStatus } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
 
 export async function PATCH(
@@ -37,7 +37,11 @@ export async function PATCH(
     if (body.homeBase !== undefined) data.homeBase = body.homeBase || null;
     if (body.notes !== undefined) data.notes = body.notes || null;
   }
-  if (body.status !== undefined) data.status = body.status;
+  if (body.status !== undefined) {
+    if (!isDriverStatus(body.status))
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    data.status = body.status;
+  }
   if (body.availableHours !== undefined && body.availableHours !== "")
     data.availableHours = Number(body.availableHours);
 

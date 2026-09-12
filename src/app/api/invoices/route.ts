@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isInvoiceStatus } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
 
 export async function GET() {
@@ -26,6 +26,8 @@ export async function POST(req: Request) {
   const body = await req.json();
   if (!body.loadId)
     return NextResponse.json({ error: "Load required" }, { status: 400 });
+  if (body.status && !isInvoiceStatus(body.status))
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
   const load = await prisma.load.findUnique({
     where: { id: body.loadId },

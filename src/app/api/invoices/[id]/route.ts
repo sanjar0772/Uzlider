@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isInvoiceStatus } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
+import { notifyInvoicePaid } from "@/lib/telegram";
 
 export async function PATCH(
   req: Request,
@@ -13,11 +14,16 @@ export async function PATCH(
   if (!can.manageInvoices(session.role))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const existing = await prisma.invoice.findUnique({ where: { id: params.id } });
+  if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
   const body = await req.json();
   const data: any = {};
   if (body.number !== undefined) data.number = body.number;
   if (body.amount !== undefined) data.amount = Number(body.amount);
   if (body.status !== undefined) {
+    if (!isInvoiceStatus(body.status))
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     data.status = body.status;
     if (body.status === "PAID") data.paidAt = new Date();
   }
@@ -40,6 +46,9 @@ export async function PATCH(
       invoice.number,
       body.status ? `→ ${body.status}` : null
     );
+    if (body.status === "PAID" && existing.status !== "PAID") {
+      notifyInvoicePaid(invoice, session.name).catch(() => {});
+    }
     return NextResponse.json({ invoice });
   } catch (e: any) {
     if (e.code === "P2002")

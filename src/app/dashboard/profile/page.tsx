@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { UserCircle, Lock, Palette, Sun, Moon } from "lucide-react";
+import { UserCircle, Lock, Palette, Sun, Moon, Send } from "lucide-react";
 import { useI18n, LANG_LABELS, Lang } from "@/lib/i18n";
 import { useTheme } from "@/lib/theme";
 import { useToast } from "@/components/Toast";
@@ -21,13 +21,30 @@ export default function ProfilePage() {
   const [np, setNp] = useState("");
   const [cp, setCp] = useState("");
   const [pwErr, setPwErr] = useState("");
+  const [tg, setTg] = useState<any>(null);
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => r.json()).then((d) => {
       setMe(d.user);
       setName(d.user?.name ?? "");
     });
+    loadTg();
   }, []);
+
+  function loadTg() {
+    fetch("/api/telegram/link").then((r) => r.json()).then(setTg).catch(() => {});
+  }
+
+  async function genCode() {
+    const res = await fetch("/api/telegram/link", { method: "POST" });
+    if (res.ok) { setTg(await res.json()); }
+    else toast.error(t("somethingWrong"));
+  }
+
+  async function disconnectTg() {
+    const res = await fetch("/api/telegram/link", { method: "DELETE" });
+    if (res.ok) { loadTg(); toast.success(t("updatedOk")); }
+  }
 
   async function saveProfile(e: React.FormEvent) {
     e.preventDefault();
@@ -89,6 +106,34 @@ export default function ProfilePage() {
             {pwErr && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 dark:bg-red-500/10">{pwErr}</p>}
             <button type="submit" className="btn-primary"><Lock size={16} /> {t("changePassword")}</button>
           </form>
+        </div>
+
+        {/* Telegram linking */}
+        <div className="card p-6 lg:col-span-2">
+          <h2 className="mb-4 flex items-center gap-2 font-semibold text-slate-900 dark:text-white">
+            <Send size={18} /> {t("connectTelegram")}
+          </h2>
+          {tg?.connected ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="badge bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                {t("connected")}{tg.username ? ` · @${tg.username}` : ""}
+              </span>
+              <button onClick={disconnectTg} className="btn-secondary">{t("disconnect")}</button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="badge bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-300">{t("notConnected")}</span>
+                <button onClick={genCode} className="btn-primary"><Send size={15} /> {t("generateCode")}</button>
+              </div>
+              {tg?.code && (
+                <div className="rounded-lg bg-slate-50 p-3 text-sm dark:bg-slate-800/50">
+                  <span className="text-slate-500">{t("linkCodeHint")}</span>{" "}
+                  <code className="rounded bg-white px-2 py-1 font-mono text-base font-bold tracking-wider text-brand-600 dark:bg-slate-900 dark:text-brand-300">/link {tg.code}</code>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Preferences */}

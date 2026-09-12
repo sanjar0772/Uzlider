@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isLoadStatus, isEquipmentType } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
+import { notifyLoadStatus } from "@/lib/telegram";
 
 export async function GET(
   _req: Request,
@@ -68,14 +69,22 @@ export async function PATCH(
     if (body.weight !== undefined)
       data.weight = body.weight ? Number(body.weight) : null;
     if (body.commodity !== undefined) data.commodity = body.commodity || null;
-    if (body.equipment !== undefined) data.equipment = body.equipment;
+    if (body.equipment !== undefined) {
+      if (!isEquipmentType(body.equipment))
+        return NextResponse.json({ error: "Invalid equipment" }, { status: 400 });
+      data.equipment = body.equipment;
+    }
     if (body.notes !== undefined) data.notes = body.notes || null;
     if (body.customerId !== undefined) data.customerId = body.customerId || null;
     if (body.driverId !== undefined) data.driverId = body.driverId || null;
     if (body.truckId !== undefined) data.truckId = body.truckId || null;
   }
 
-  if (body.status !== undefined && can.updateStatus(session.role)) {
+  if (body.status !== undefined) {
+    if (!can.updateStatus(session.role))
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!isLoadStatus(body.status))
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     if (session.role === "DRIVER" && existing.driverId !== session.driverId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -95,6 +104,9 @@ export async function PATCH(
       load.refNumber,
       data.status ? `→ ${data.status}` : null
     );
+    if (data.status && data.status !== existing.status) {
+      notifyLoadStatus(load, data.status, session.name).catch(() => {});
+    }
     return NextResponse.json({ load });
   } catch (e: any) {
     if (e.code === "P2002")

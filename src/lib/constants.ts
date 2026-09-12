@@ -60,7 +60,41 @@ export const can = {
     ["OWNER", "MANAGER", "ACCOUNTANT", "DISPATCHER"].includes(r),
   viewAllLoads: (r: string) => r !== "DRIVER",
   viewActivity: (r: string) => ["OWNER", "MANAGER"].includes(r),
+  // Company + Telegram settings: admins only.
+  manageSettings: (r: string) => ["OWNER", "MANAGER"].includes(r),
+  manageTelegram: (r: string) => ["OWNER", "MANAGER"].includes(r),
+  // Only an Owner may create/modify/delete Owner accounts or grant the Owner role.
+  manageOwners: (r: string) => r === "OWNER",
 };
+
+// Rank used to stop privilege escalation: a user may never act on an account
+// whose role outranks their own, nor grant a role above their own.
+export const ROLE_RANK: Record<string, number> = {
+  OWNER: 5,
+  MANAGER: 4,
+  ACCOUNTANT: 3,
+  DISPATCHER: 3,
+  UPDATER: 2,
+  DRIVER: 1,
+};
+
+// Validate that a value is a member of an enum list (guards against 500s and
+// clients pushing arbitrary status strings straight into the database).
+export function isLoadStatus(v: any): v is LoadStatus {
+  return typeof v === "string" && (LOAD_STATUSES as readonly string[]).includes(v);
+}
+export function isDriverStatus(v: any): v is DriverStatus {
+  return typeof v === "string" && (DRIVER_STATUSES as readonly string[]).includes(v);
+}
+export function isTruckStatus(v: any): v is TruckStatus {
+  return typeof v === "string" && (TRUCK_STATUSES as readonly string[]).includes(v);
+}
+export function isInvoiceStatus(v: any): v is InvoiceStatus {
+  return typeof v === "string" && (INVOICE_STATUSES as readonly string[]).includes(v);
+}
+export function isEquipmentType(v: any): v is EquipmentType {
+  return typeof v === "string" && (EQUIPMENT_TYPES as readonly string[]).includes(v);
+}
 
 export const ROLE_COLORS: Record<string, string> = {
   OWNER: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",

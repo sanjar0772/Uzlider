@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isDriverStatus } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
 
 export async function GET() {
@@ -26,6 +26,8 @@ export async function POST(req: Request) {
 
   const body = await req.json();
   if (!body.name) return NextResponse.json({ error: "Name required" }, { status: 400 });
+  if (body.status && !isDriverStatus(body.status))
+    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 
   const driver = await prisma.driver.create({
     data: {

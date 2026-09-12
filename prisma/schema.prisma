@@ -63,6 +63,10 @@ model User {
   phone        String?
   driverId     String?  @unique
   driver       Driver?  @relation(fields: [driverId], references: [id])
+  // Telegram account linking
+  telegramChatId   String? @unique
+  telegramUsername String?
+  telegramLinkCode String? @unique
   createdAt    DateTime @default(now())
 }
 
@@ -204,6 +208,14 @@ model CompanySettings {
   fixedCostPerMile  Float    @default(0.35)
   targetRpm         Float    @default(2.00)
   factoringRatePct  Float    @default(3.0)
+  // ---- Telegram integration ----
+  telegramEnabled   Boolean  @default(false)
+  telegramBotToken  String?
+  telegramChatId    String?  // dispatch group / channel id for broadcasts
+  notifyNewLoad     Boolean  @default(true)
+  notifyStatus      Boolean  @default(true)
+  notifyInvoicePaid Boolean  @default(true)
+  notifyCompliance  Boolean  @default(true)
   updatedAt         DateTime @updatedAt @default(now())
 }
 

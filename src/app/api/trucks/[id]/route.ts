@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
-import { can } from "@/lib/constants";
+import { can, isTruckStatus } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
 
 export async function PATCH(
@@ -21,7 +21,11 @@ export async function PATCH(
   if (body.model !== undefined) data.model = body.model || null;
   if (body.year !== undefined) data.year = body.year ? Number(body.year) : null;
   if (body.vin !== undefined) data.vin = body.vin || null;
-  if (body.status !== undefined) data.status = body.status;
+  if (body.status !== undefined) {
+    if (!isTruckStatus(body.status))
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    data.status = body.status;
+  }
   if (body.odometer !== undefined) data.odometer = body.odometer ? Number(body.odometer) : null;
   if (body.mpg !== undefined) data.mpg = body.mpg ? Number(body.mpg) : null;
   if (body.registrationExpiry !== undefined)

@@ -669,6 +669,44 @@ Object.assign(translations.uz, {
   goodRate: "Yaxshi narx", lowRate: "Past narx", generate: "Hisoblash", from: "Dan", to: "Gacha",
 });
 
+// ---- Telegram integration keys ----
+Object.assign(translations.en, {
+  telegram: "Telegram", telegramIntegration: "Telegram integration",
+  enableTelegram: "Enable Telegram", botToken: "Bot token", configured: "Configured",
+  replaceToken: "Replace token", dispatchChatId: "Dispatch chat id",
+  notifications: "Notifications", notifyNewLoad: "New load", notifyStatus: "Status change",
+  notifyInvoicePaid: "Invoice paid", notifyCompliance: "Compliance alerts",
+  sendTest: "Send test", testSent: "Test message sent", testFailed: "Test failed",
+  telegramHint: "Create a bot with @BotFather, paste the token, add the bot to your dispatch group, send /id there and paste the chat id here.",
+  connectTelegram: "Connect Telegram", disconnect: "Disconnect", connected: "Connected",
+  notConnected: "Not connected", generateCode: "Generate code",
+  linkCodeHint: "Open the bot in Telegram and send:", copied: "Copied",
+});
+Object.assign(translations.ru, {
+  telegram: "Telegram", telegramIntegration: "Интеграция Telegram",
+  enableTelegram: "Включить Telegram", botToken: "Токен бота", configured: "Настроено",
+  replaceToken: "Заменить токен", dispatchChatId: "ID чата диспетчерской",
+  notifications: "Уведомления", notifyNewLoad: "Новый груз", notifyStatus: "Смена статуса",
+  notifyInvoicePaid: "Счёт оплачен", notifyCompliance: "Оповещения по документам",
+  sendTest: "Отправить тест", testSent: "Тестовое сообщение отправлено", testFailed: "Ошибка теста",
+  telegramHint: "Создайте бота через @BotFather, вставьте токен, добавьте бота в группу диспетчеров, отправьте там /id и вставьте ID сюда.",
+  connectTelegram: "Подключить Telegram", disconnect: "Отключить", connected: "Подключено",
+  notConnected: "Не подключено", generateCode: "Сгенерировать код",
+  linkCodeHint: "Откройте бота в Telegram и отправьте:", copied: "Скопировано",
+});
+Object.assign(translations.uz, {
+  telegram: "Telegram", telegramIntegration: "Telegram integratsiyasi",
+  enableTelegram: "Telegramni yoqish", botToken: "Bot tokeni", configured: "Sozlangan",
+  replaceToken: "Tokenni almashtirish", dispatchChatId: "Dispetcher chat id",
+  notifications: "Bildirishnomalar", notifyNewLoad: "Yangi yuk", notifyStatus: "Status o'zgarishi",
+  notifyInvoicePaid: "Hisob-faktura to'landi", notifyCompliance: "Hujjat ogohlantirishlari",
+  sendTest: "Test yuborish", testSent: "Test xabari yuborildi", testFailed: "Test muvaffaqiyatsiz",
+  telegramHint: "@BotFather orqali bot yarating, tokenni joylang, botni dispetcher guruhiga qo'shing, u yerda /id yuboring va chat id ni shu yerga joylang.",
+  connectTelegram: "Telegramni ulash", disconnect: "Uzish", connected: "Ulangan",
+  notConnected: "Ulanmagan", generateCode: "Kod yaratish",
+  linkCodeHint: "Telegramda botni oching va yuboring:", copied: "Nusxalandi",
+});
+
 type I18nContextType = {
   lang: Lang;
   setLang: (l: Lang) => void;
