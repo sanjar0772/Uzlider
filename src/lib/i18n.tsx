@@ -706,6 +706,58 @@ Object.assign(translations.uz, {
   notConnected: "Ulanmagan", generateCode: "Kod yaratish",
   linkCodeHint: "Telegramda botni oching va yuboring:", copied: "Nusxalandi",
 });
+// ---- Live GPS tracking + Telegram + login hero ----
+Object.assign(translations.en, {
+  loginHeroTitle: "Run your fleet with confidence.",
+  loginHeroSubtitle: "Dispatch, track drivers live, and stay compliant — all in one place.",
+  featLiveGps: "Live GPS driver tracking",
+  featTelegram: "Instant Telegram alerts",
+  featCompliance: "Compliance & document reminders",
+  liveTracking: "Live tracking", online: "online", refresh: "Refresh",
+  noLiveDrivers: "No drivers sharing location yet",
+  noLiveDriversHint: "Drivers turn on GPS sharing from their dashboard.",
+  gpsSharing: "GPS location sharing", gpsShareLocation: "Share location",
+  gpsLive: "GPS live", gpsOn: "Location sharing on", gpsOff: "Location sharing off",
+  gpsDenied: "Location permission denied", gpsUnsupported: "GPS not supported on this device",
+  telegramIntegration: "Telegram integration", enabled: "Enabled",
+  telegramHelp: "Create a bot with @BotFather to get a token, then add the bot to your group/channel and paste its chat ID. Alerts are sent on new loads and status updates.",
+  telegramBotToken: "Bot token", telegramChatId: "Chat ID", telegramTest: "Send test",
+  telegramTestOk: "Test message sent!", telegramTestFail: "Test failed — check token and chat ID",
+});
+Object.assign(translations.ru, {
+  loginHeroTitle: "Управляйте автопарком уверенно.",
+  loginHeroSubtitle: "Диспетчеризация, отслеживание водителей в реальном времени и контроль документов — всё в одном месте.",
+  featLiveGps: "GPS-отслеживание водителей",
+  featTelegram: "Мгновенные уведомления в Telegram",
+  featCompliance: "Напоминания о документах",
+  liveTracking: "Отслеживание", online: "в сети", refresh: "Обновить",
+  noLiveDrivers: "Пока никто не делится локацией",
+  noLiveDriversHint: "Водители включают GPS в своей панели.",
+  gpsSharing: "Передача GPS-локации", gpsShareLocation: "Поделиться локацией",
+  gpsLive: "GPS включён", gpsOn: "Передача локации включена", gpsOff: "Передача локации выключена",
+  gpsDenied: "Доступ к локации запрещён", gpsUnsupported: "GPS не поддерживается",
+  telegramIntegration: "Интеграция с Telegram", enabled: "Включено",
+  telegramHelp: "Создайте бота через @BotFather, получите токен, добавьте бота в группу/канал и вставьте его chat ID. Уведомления приходят при новых грузах и обновлениях статуса.",
+  telegramBotToken: "Токен бота", telegramChatId: "Chat ID", telegramTest: "Тест",
+  telegramTestOk: "Тестовое сообщение отправлено!", telegramTestFail: "Ошибка — проверьте токен и chat ID",
+});
+Object.assign(translations.uz, {
+  loginHeroTitle: "Avtoparkingizni ishonch bilan boshqaring.",
+  loginHeroSubtitle: "Dispetcherlik, haydovchilarni jonli kuzatish va hujjatlar nazorati — barchasi bir joyda.",
+  featLiveGps: "Haydovchilarni jonli GPS kuzatuv",
+  featTelegram: "Telegramda tezkor xabarlar",
+  featCompliance: "Hujjatlar bo'yicha eslatmalar",
+  liveTracking: "Jonli kuzatuv", online: "onlayn", refresh: "Yangilash",
+  noLiveDrivers: "Hozircha hech kim joylashuvni ulashmayapti",
+  noLiveDriversHint: "Haydovchilar o'z panelidan GPS ulashishni yoqadi.",
+  gpsSharing: "GPS joylashuvni ulashish", gpsShareLocation: "Joylashuvni ulashish",
+  gpsLive: "GPS yoniq", gpsOn: "Joylashuv ulashish yoqildi", gpsOff: "Joylashuv ulashish o'chirildi",
+  gpsDenied: "Joylashuvga ruxsat berilmadi", gpsUnsupported: "Bu qurilmada GPS mavjud emas",
+  telegramIntegration: "Telegram integratsiyasi", enabled: "Yoqilgan",
+  telegramHelp: "@BotFather orqali bot yarating va token oling, keyin botni guruh/kanalingizga qo'shib, uning chat ID sini kiriting. Yangi yuklar va status yangilanishlarida xabar keladi.",
+  telegramBotToken: "Bot tokeni", telegramChatId: "Chat ID", telegramTest: "Test yuborish",
+  telegramTestOk: "Test xabari yuborildi!", telegramTestFail: "Xatolik — token va chat ID ni tekshiring",
+});
 
 type I18nContextType = {
   lang: Lang;

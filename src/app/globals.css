@@ -11,20 +11,21 @@
 
 body {
   @apply bg-slate-100 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-100;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 @layer components {
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50;
   }
   .btn-primary {
-    @apply btn bg-brand-600 text-white hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/40;
+    @apply btn bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-sm hover:from-brand-600 hover:to-brand-700 hover:shadow-glow focus:outline-none focus:ring-2 focus:ring-brand-500/40 active:scale-[0.98];
   }
   .btn-secondary {
-    @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
+    @apply btn border border-slate-300 bg-white text-slate-700 shadow-soft hover:bg-slate-50 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700;
   }
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700;
+    @apply btn bg-red-600 text-white shadow-sm hover:bg-red-700 active:scale-[0.98];
   }
   .btn-ghost {
     @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800;
@@ -36,7 +37,10 @@ body {
     @apply mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300;
   }
   .card {
-    @apply rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900;
+    @apply rounded-xl border border-slate-200 bg-white shadow-card dark:border-slate-800 dark:bg-slate-900;
+  }
+  .card-hover {
+    @apply transition-all duration-200 hover:-translate-y-0.5 hover:shadow-pop;
   }
   .badge {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
@@ -50,6 +54,9 @@ body {
   .skeleton {
     @apply animate-pulse rounded-md bg-slate-200 dark:bg-slate-800;
   }
+  .gradient-text {
+    @apply bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent dark:from-brand-300 dark:to-brand-500;
+  }
 }
 
 /* Scrollbars */
@@ -62,4 +69,35 @@ body {
 }
 ::-webkit-scrollbar-track {
   background: transparent;
+}
+
+/* Leaflet: keep map tiles below sticky header / drawers */
+.leaflet-container {
+  font: inherit;
+}
+.leaflet-pane,
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 5 !important;
+}
+
+/* Live pulse marker used on the fleet map */
+.uz-pulse {
+  position: relative;
+}
+.uz-pulse::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  opacity: 0.35;
+  animation: uz-pulse 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes uz-pulse {
+  75%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
 }

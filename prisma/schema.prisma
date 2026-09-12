@@ -86,11 +86,33 @@ model Driver {
   hireDate       DateTime?
   availableHours Float?    @default(70) // HOS cycle hours remaining (simplified)
   homeBase       String?
+  // ---- Live GPS location (latest known position) ----
+  gpsEnabled       Boolean   @default(false) // driver opted in to share location
+  lastLat          Float?
+  lastLng          Float?
+  lastSpeed        Float?    // meters/second, from device (optional)
+  lastHeading      Float?    // degrees, from device (optional)
+  lastLocationAt   DateTime?
   createdAt     DateTime     @default(now())
 
-  account User?
-  loads   Load[]
-  truck   Truck?
+  account   User?
+  loads     Load[]
+  truck     Truck?
+  locations LocationPing[]
+}
+
+// Historical GPS breadcrumb trail for a driver.
+model LocationPing {
+  id        String   @id @default(cuid())
+  driverId  String
+  driver    Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  lat       Float
+  lng       Float
+  speed     Float?
+  heading   Float?
+  createdAt DateTime @default(now())
+
+  @@index([driverId, createdAt])
 }
 
 model Truck {

@@ -21,6 +21,7 @@ import {
   Sun,
   ShieldCheck,
   SlidersHorizontal,
+  Radio,
   type LucideIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -30,6 +31,8 @@ import type { SessionUser } from "@/lib/auth";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import CommandPalette from "@/components/CommandPalette";
 import Notifications from "@/components/Notifications";
+import Logo from "@/components/Logo";
+import DriverLocationTracker from "@/components/DriverLocationTracker";
 import { Search } from "lucide-react";
 
 type NavItem = {
@@ -58,6 +61,7 @@ export default function DashboardShell({
   const nav: NavItem[] = [
     { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard, show: true, group: "operations" },
     { href: "/dashboard/board", label: t("dispatchBoard"), icon: Columns3, show: staff, group: "operations" },
+    { href: "/dashboard/tracking", label: t("liveTracking"), icon: Radio, show: staff, group: "operations" },
     { href: "/dashboard/loads", label: t("loads"), icon: Package, show: true, group: "operations" },
     { href: "/dashboard/drivers", label: t("drivers"), icon: Users, show: staff, group: "fleet" },
     { href: "/dashboard/trucks", label: t("trucks"), icon: Truck, show: staff, group: "fleet" },
@@ -84,18 +88,8 @@ export default function DashboardShell({
 
   const Sidebar = () => (
     <div className="flex h-full flex-col">
-      <div className="flex items-center gap-2 px-5 py-4">
-        <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-600 text-lg">
-          🚚
-        </span>
-        <div>
-          <div className="font-bold leading-tight text-slate-900 dark:text-white">
-            Uzlider
-          </div>
-          <div className="text-[10px] uppercase tracking-wider text-slate-400">
-            TMS
-          </div>
-        </div>
+      <div className="flex items-center px-5 py-4">
+        <Logo size={34} />
       </div>
 
       <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-2">
@@ -118,7 +112,7 @@ export default function DashboardShell({
                       onClick={() => setOpen(false)}
                       className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition ${
                         active
-                          ? "bg-brand-600 text-white shadow-sm"
+                          ? "bg-gradient-to-r from-brand-500 to-brand-600 text-white shadow-glow"
                           : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                       }`}
                     >
@@ -213,6 +207,9 @@ export default function DashboardShell({
       </div>
 
       <CommandPalette staff={staff} />
+      {user.role === "DRIVER" && user.driverId && (
+        <DriverLocationTracker driverId={user.driverId} />
+      )}
     </div>
   );
 }

@@ -3,7 +3,15 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can, isLoadStatus } from "@/lib/constants";
 import { logActivity } from "@/lib/activity";
-import { notifyLoadStatus } from "@/lib/telegram";
+import { notifyTelegram, escapeHtml } from "@/lib/telegram";
+
+const STATUS_LABEL: Record<string, string> = {
+  NEW: "🆕 Yangi",
+  ASSIGNED: "📋 Biriktirilgan",
+  IN_TRANSIT: "🚚 Yo'lda",
+  DELIVERED: "✅ Yetkazilgan",
+  CANCELLED: "❌ Bekor qilingan",
+};
 
 // Add a status update / note to a load. Optionally moves the load status.
 export async function POST(
@@ -39,13 +47,21 @@ export async function POST(
 
   // If a status was supplied, also move the load status.
   if (body.status && body.status !== load.status) {
-    const updated = await prisma.load.update({
+    await prisma.load.update({
       where: { id: params.id },
       data: { status: body.status },
     });
     await logActivity(session, "status_changed", "load", load.refNumber, `→ ${body.status}`);
-    notifyLoadStatus(updated, body.status, session.name, body.location || body.note || null).catch(
-      () => {}
+  }
+
+  // Notify Telegram (if configured) about the update.
+  if (body.status || body.location || body.note) {
+    void notifyTelegram(
+      `🔔 <b>${escapeHtml(load.refNumber)}</b> — ${escapeHtml(load.origin)} → ${escapeHtml(load.destination)}\n` +
+        (body.status ? `${STATUS_LABEL[body.status] ?? escapeHtml(body.status)}\n` : "") +
+        (body.location ? `📍 ${escapeHtml(String(body.location))}\n` : "") +
+        (body.note ? `📝 ${escapeHtml(String(body.note))}\n` : "") +
+        `👤 ${escapeHtml(session.name)}`
     );
   }
 

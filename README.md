@@ -25,6 +25,11 @@ Trilingual interface: **English / Русский / O'zbekcha** (switch in the to
 - **Invoices** — billing per load, mark sent/paid, outstanding tracking
 - **Reports** — revenue by month, by driver, by status (Accountant+)
 - **Activity log** — who changed what (Owner/Manager)
+- **Live GPS tracking** — drivers turn on location sharing from a one-tap
+  control; dispatchers see the whole fleet on a live, auto-refreshing map
+  (`Live tracking` page) with each driver's status and current load
+- **Telegram integration** — connect a bot in **Settings** to get instant
+  alerts in your group/channel on new loads and status updates
 - **Users** — role management
 - **Profile** — change your own password, theme & language
 - **Polish** — light/dark mode, 3 languages, toasts, confirm dialogs,
@@ -80,3 +85,11 @@ from the **Users** page.
 - `.env` holds `DATABASE_URL` (PostgreSQL) and `AUTH_SECRET`. **Change
   `AUTH_SECRET` before deploying to production.**
 - The seed only runs when the database is empty, so redeploys never wipe data.
+- **Live GPS** uses the browser Geolocation API, which requires **HTTPS** (or
+  `localhost`). Production hosts like Railway/Vercel serve HTTPS, so it works
+  out of the box; drivers must allow the location permission prompt.
+- **Telegram** is configured entirely from the **Settings** page (bot token +
+  chat ID) — no environment variables needed. Create a bot with
+  [@BotFather](https://t.me/BotFather), add it to your group/channel, then use
+  **Send test** to verify. The host must allow outbound HTTPS to
+  `api.telegram.org`.
