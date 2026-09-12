@@ -10,16 +10,34 @@ const prisma = new PrismaClient();
 // - Set RESET_DEMO=true (once) to wipe ALL data before seeding — useful to clear
 //   old demo records, then remove the variable again.
 async function main() {
+  // One-time demo wipe. Safe to leave RESET_DEMO=true forever: it only wipes
+  // once (guarded by a marker row), so it will never delete real data later.
   if (process.env.RESET_DEMO === "true") {
-    await prisma.activity.deleteMany();
-    await prisma.invoice.deleteMany();
-    await prisma.loadUpdate.deleteMany();
-    await prisma.load.deleteMany();
-    await prisma.truck.deleteMany();
-    await prisma.customer.deleteMany();
-    await prisma.user.deleteMany();
-    await prisma.driver.deleteMany();
-    console.log("RESET_DEMO=true → cleared all data.");
+    const alreadyReset = await prisma.activity
+      .findFirst({ where: { action: "reset_demo", entity: "system" } })
+      .catch(() => null);
+
+    if (!alreadyReset) {
+      await prisma.invoice.deleteMany();
+      await prisma.loadUpdate.deleteMany();
+      await prisma.load.deleteMany();
+      await prisma.truck.deleteMany();
+      await prisma.customer.deleteMany();
+      await prisma.user.deleteMany();
+      await prisma.driver.deleteMany();
+      await prisma.activity.deleteMany();
+      await prisma.activity.create({
+        data: {
+          action: "reset_demo",
+          entity: "system",
+          actorName: "System",
+          detail: "Demo data cleared (one-time)",
+        },
+      });
+      console.log("RESET_DEMO → demo data cleared (one-time).");
+    } else {
+      console.log("RESET_DEMO already applied earlier — no wipe.");
+    }
   }
 
   const count = await prisma.user.count();
