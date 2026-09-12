@@ -1,4 +1,11 @@
-export const ROLES = ["OWNER", "MANAGER", "DISPATCHER", "UPDATER", "DRIVER"] as const;
+export const ROLES = [
+  "OWNER",
+  "MANAGER",
+  "DISPATCHER",
+  "UPDATER",
+  "ACCOUNTANT",
+  "DRIVER",
+] as const;
 export type Role = (typeof ROLES)[number];
 
 export const LOAD_STATUSES = [
@@ -13,41 +20,87 @@ export type LoadStatus = (typeof LOAD_STATUSES)[number];
 export const DRIVER_STATUSES = ["AVAILABLE", "ON_LOAD", "OFF_DUTY"] as const;
 export type DriverStatus = (typeof DRIVER_STATUSES)[number];
 
-// Which roles can perform which action.
+export const TRUCK_STATUSES = ["ACTIVE", "MAINTENANCE", "INACTIVE"] as const;
+export type TruckStatus = (typeof TRUCK_STATUSES)[number];
+
+export const EQUIPMENT_TYPES = [
+  "VAN",
+  "REEFER",
+  "FLATBED",
+  "POWER_ONLY",
+  "STEP_DECK",
+  "OTHER",
+] as const;
+export type EquipmentType = (typeof EQUIPMENT_TYPES)[number];
+
+export const INVOICE_STATUSES = ["DRAFT", "SENT", "PAID", "OVERDUE"] as const;
+export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
+
+// ---- Permission matrix ----
 export const can = {
-  manageUsers: (role: string) => role === "OWNER" || role === "MANAGER",
-  manageDrivers: (role: string) =>
-    ["OWNER", "MANAGER", "DISPATCHER"].includes(role),
-  createLoad: (role: string) =>
-    ["OWNER", "MANAGER", "DISPATCHER"].includes(role),
-  editLoad: (role: string) =>
-    ["OWNER", "MANAGER", "DISPATCHER"].includes(role),
-  deleteLoad: (role: string) => ["OWNER", "MANAGER"].includes(role),
-  assignDriver: (role: string) =>
-    ["OWNER", "MANAGER", "DISPATCHER"].includes(role),
-  updateStatus: (role: string) =>
-    ["OWNER", "MANAGER", "DISPATCHER", "UPDATER", "DRIVER"].includes(role),
-  viewAllLoads: (role: string) => role !== "DRIVER",
+  manageUsers: (r: string) => ["OWNER", "MANAGER"].includes(r),
+  manageDrivers: (r: string) =>
+    ["OWNER", "MANAGER", "DISPATCHER"].includes(r),
+  manageTrucks: (r: string) => ["OWNER", "MANAGER", "DISPATCHER"].includes(r),
+  manageCustomers: (r: string) =>
+    ["OWNER", "MANAGER", "DISPATCHER"].includes(r),
+  createLoad: (r: string) => ["OWNER", "MANAGER", "DISPATCHER"].includes(r),
+  editLoad: (r: string) => ["OWNER", "MANAGER", "DISPATCHER"].includes(r),
+  deleteLoad: (r: string) => ["OWNER", "MANAGER"].includes(r),
+  assignDriver: (r: string) => ["OWNER", "MANAGER", "DISPATCHER"].includes(r),
+  updateStatus: (r: string) =>
+    ["OWNER", "MANAGER", "DISPATCHER", "UPDATER", "DRIVER"].includes(r),
+  manageInvoices: (r: string) =>
+    ["OWNER", "MANAGER", "ACCOUNTANT"].includes(r),
+  viewInvoices: (r: string) =>
+    ["OWNER", "MANAGER", "ACCOUNTANT"].includes(r),
+  viewReports: (r: string) =>
+    ["OWNER", "MANAGER", "ACCOUNTANT"].includes(r),
+  viewFinancials: (r: string) =>
+    ["OWNER", "MANAGER", "ACCOUNTANT", "DISPATCHER"].includes(r),
+  viewAllLoads: (r: string) => r !== "DRIVER",
+  viewActivity: (r: string) => ["OWNER", "MANAGER"].includes(r),
 };
 
 export const ROLE_COLORS: Record<string, string> = {
-  OWNER: "bg-purple-100 text-purple-700",
-  MANAGER: "bg-blue-100 text-blue-700",
-  DISPATCHER: "bg-emerald-100 text-emerald-700",
-  UPDATER: "bg-amber-100 text-amber-700",
-  DRIVER: "bg-slate-100 text-slate-700",
+  OWNER: "bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300",
+  MANAGER: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  DISPATCHER:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  UPDATER: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  ACCOUNTANT:
+    "bg-cyan-100 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300",
+  DRIVER: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
 };
 
 export const LOAD_STATUS_COLORS: Record<string, string> = {
-  NEW: "bg-slate-100 text-slate-700",
-  ASSIGNED: "bg-blue-100 text-blue-700",
-  IN_TRANSIT: "bg-amber-100 text-amber-700",
-  DELIVERED: "bg-emerald-100 text-emerald-700",
-  CANCELLED: "bg-red-100 text-red-700",
+  NEW: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+  ASSIGNED: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  IN_TRANSIT:
+    "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  DELIVERED:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  CANCELLED: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
 };
 
 export const DRIVER_STATUS_COLORS: Record<string, string> = {
-  AVAILABLE: "bg-emerald-100 text-emerald-700",
-  ON_LOAD: "bg-amber-100 text-amber-700",
-  OFF_DUTY: "bg-slate-100 text-slate-700",
+  AVAILABLE:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  ON_LOAD: "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  OFF_DUTY: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+};
+
+export const TRUCK_STATUS_COLORS: Record<string, string> = {
+  ACTIVE:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  MAINTENANCE:
+    "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300",
+  INACTIVE: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+};
+
+export const INVOICE_STATUS_COLORS: Record<string, string> = {
+  DRAFT: "bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300",
+  SENT: "bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300",
+  PAID: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300",
+  OVERDUE: "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300",
 };

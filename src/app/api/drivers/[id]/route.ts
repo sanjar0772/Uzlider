@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can } from "@/lib/constants";
+import { logActivity } from "@/lib/activity";
 
 export async function PATCH(
   req: Request,
@@ -10,7 +11,6 @@ export async function PATCH(
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Drivers may update their own availability status only.
   const isManager = can.manageDrivers(session.role);
   const isSelf = session.role === "DRIVER" && session.driverId === params.id;
   if (!isManager && !isSelf)
@@ -22,6 +22,7 @@ export async function PATCH(
   if (isManager) {
     if (body.name !== undefined) data.name = body.name;
     if (body.phone !== undefined) data.phone = body.phone || null;
+    if (body.email !== undefined) data.email = body.email || null;
     if (body.truckNumber !== undefined) data.truckNumber = body.truckNumber || null;
     if (body.trailerNumber !== undefined)
       data.trailerNumber = body.trailerNumber || null;
@@ -32,6 +33,7 @@ export async function PATCH(
   if (body.status !== undefined) data.status = body.status;
 
   const driver = await prisma.driver.update({ where: { id: params.id }, data });
+  await logActivity(session, "updated", "driver", driver.name);
   return NextResponse.json({ driver });
 }
 
@@ -44,7 +46,7 @@ export async function DELETE(
   if (!can.manageDrivers(session.role))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-  // Unassign from loads first to avoid orphan references.
+  const driver = await prisma.driver.findUnique({ where: { id: params.id } });
   await prisma.load.updateMany({
     where: { driverId: params.id },
     data: { driverId: null },
@@ -53,6 +55,11 @@ export async function DELETE(
     where: { driverId: params.id },
     data: { driverId: null },
   });
+  await prisma.truck.updateMany({
+    where: { driverId: params.id },
+    data: { driverId: null },
+  });
   await prisma.driver.delete({ where: { id: params.id } });
+  await logActivity(session, "deleted", "driver", driver?.name);
   return NextResponse.json({ ok: true });
 }

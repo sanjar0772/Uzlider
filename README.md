@@ -7,16 +7,28 @@ Trilingual interface: **English / Русский / O'zbekcha** (switch in the to
 
 ## Features
 
-- **Authentication & roles** — every role sees only what it should:
-  - **Owner** & **Manager** — full access (loads, drivers, users)
-  - **Dispatcher** — create/assign loads, manage drivers
-  - **Updater** — update load statuses and post progress updates
-  - **Driver** — sees only their own loads and can update their status
-- **Loads** — create, edit, assign a driver, search & filter, delete, full
-  status-update history (location + notes)
-- **Drivers** — profiles with truck/trailer/license, availability status
-- **Users** — owner/manager can create accounts and assign roles
-- **Dashboard** — live stats (total / active / delivered loads, available drivers)
+- **Authentication & 6 roles** — every role sees only what it should:
+  - **Owner** & **Manager** — full access
+  - **Dispatcher** — loads, drivers, trucks, customers, dispatch board
+  - **Updater** — post status updates
+  - **Accountant** — invoices, billing, reports
+  - **Driver** — sees only their own loads, updates their own status
+- **Dashboard** — role-aware KPIs, revenue chart, loads-by-status donut,
+  top drivers, unassigned loads; drivers get a big current-load card
+- **Dispatch board** — kanban view; assign drivers and move loads across
+  statuses in one click
+- **Loads** — full CRUD with customer, driver, truck, equipment, rate,
+  driver pay & margin, search & filter, status-update history
+- **Drivers** — profiles, availability, linked truck
+- **Trucks** — fleet with unit #, plate, make/model, status, assigned driver
+- **Customers** — brokers/shippers with contacts and MC #
+- **Invoices** — billing per load, mark sent/paid, outstanding tracking
+- **Reports** — revenue by month, by driver, by status (Accountant+)
+- **Activity log** — who changed what (Owner/Manager)
+- **Users** — role management
+- **Profile** — change your own password, theme & language
+- **Polish** — light/dark mode, 3 languages, toasts, confirm dialogs,
+  loading skeletons, responsive layout
 
 ## Tech stack
 
@@ -37,22 +49,21 @@ npm run setup   # pushes the schema and seeds demo data
 npm run dev     # http://localhost:3000
 ```
 
-Then open http://localhost:3000 and sign in with one of the demo accounts below.
+Then open http://localhost:3000 and sign in with the Owner account created by
+the seed (default `admin@uzlider.com` / `admin123`, or your `ADMIN_EMAIL` /
+`ADMIN_PASSWORD`). Create the rest of your staff from the **Users** page.
 
 ## Deploying
 
 See [DEPLOY.md](DEPLOY.md) for step-by-step Railway deployment (with managed
 PostgreSQL).
 
-### Demo accounts
+### First account
 
-| Role       | Email                  | Password      |
-|------------|------------------------|---------------|
-| Owner      | owner@uzlider.com      | `owner123`    |
-| Manager    | manager@uzlider.com    | `manager123`  |
-| Dispatcher | dispatch@uzlider.com   | `dispatch123` |
-| Updater    | updater@uzlider.com    | `updater123`  |
-| Driver     | driver@uzlider.com     | `driver123`   |
+The seed creates a single **Owner** account (no demo data):
+`ADMIN_EMAIL` / `ADMIN_PASSWORD`, or the default `admin@uzlider.com` /
+`admin123`. Sign in, change your password, and create the rest of the team
+from the **Users** page.
 
 ## Scripts
 

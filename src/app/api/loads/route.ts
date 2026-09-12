@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can } from "@/lib/constants";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(req: Request) {
   const session = await getSession();
@@ -12,8 +13,6 @@ export async function GET(req: Request) {
   const status = searchParams.get("status")?.trim();
 
   const where: any = {};
-
-  // Drivers only see their own loads
   if (session.role === "DRIVER") {
     where.driverId = session.driverId ?? "__none__";
   }
@@ -25,12 +24,18 @@ export async function GET(req: Request) {
       { origin: like },
       { destination: like },
       { broker: like },
+      { commodity: like },
     ];
   }
 
   const loads = await prisma.load.findMany({
     where,
-    include: { driver: true },
+    include: {
+      driver: true,
+      truck: true,
+      customer: true,
+      invoice: true,
+    },
     orderBy: { createdAt: "desc" },
   });
 
@@ -58,14 +63,21 @@ export async function POST(req: Request) {
         pickupDate: body.pickupDate ? new Date(body.pickupDate) : null,
         deliveryDate: body.deliveryDate ? new Date(body.deliveryDate) : null,
         rate: body.rate ? Number(body.rate) : null,
+        driverPay: body.driverPay ? Number(body.driverPay) : null,
         miles: body.miles ? Number(body.miles) : null,
+        weight: body.weight ? Number(body.weight) : null,
+        commodity: body.commodity || null,
+        equipment: body.equipment || "VAN",
         status: body.status || (body.driverId ? "ASSIGNED" : "NEW"),
+        customerId: body.customerId || null,
         driverId: body.driverId || null,
+        truckId: body.truckId || null,
         dispatcherId: session.id,
         dispatcherName: session.name,
         notes: body.notes || null,
       },
     });
+    await logActivity(session, "created", "load", load.refNumber);
     return NextResponse.json({ load });
   } catch (e: any) {
     if (e.code === "P2002")

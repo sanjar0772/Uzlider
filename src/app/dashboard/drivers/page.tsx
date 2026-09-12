@@ -1,43 +1,28 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { Plus, Phone, Truck as TruckIcon, Pencil, Trash2, Users } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
-import {
-  can,
-  DRIVER_STATUSES,
-  DRIVER_STATUS_COLORS,
-} from "@/lib/constants";
+import { useToast } from "@/components/Toast";
+import { useConfirm } from "@/components/Confirm";
+import { can, DRIVER_STATUSES, DRIVER_STATUS_COLORS } from "@/lib/constants";
 import Modal from "@/components/Modal";
-
-type Driver = {
-  id: string;
-  name: string;
-  phone: string | null;
-  truckNumber: string | null;
-  trailerNumber: string | null;
-  licenseNumber: string | null;
-  status: string;
-  notes: string | null;
-  _count?: { loads: number };
-};
+import { PageHeader, EmptyState, Skeleton } from "@/components/ui";
 
 const empty = {
-  name: "",
-  phone: "",
-  truckNumber: "",
-  trailerNumber: "",
-  licenseNumber: "",
-  status: "AVAILABLE",
-  notes: "",
+  name: "", phone: "", email: "", truckNumber: "", trailerNumber: "",
+  licenseNumber: "", status: "AVAILABLE", notes: "",
 };
 
 export default function DriversPage() {
   const { t } = useI18n();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [role, setRole] = useState("");
-  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [drivers, setDrivers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
-  const [editing, setEditing] = useState<Driver | null>(null);
+  const [editing, setEditing] = useState<any>(null);
   const [form, setForm] = useState({ ...empty });
 
   const load = useCallback(async () => {
@@ -56,21 +41,13 @@ export default function DriversPage() {
 
   const canManage = can.manageDrivers(role);
 
-  function openCreate() {
-    setEditing(null);
-    setForm({ ...empty });
-    setFormOpen(true);
-  }
-  function openEdit(d: Driver) {
+  function openCreate() { setEditing(null); setForm({ ...empty }); setFormOpen(true); }
+  function openEdit(d: any) {
     setEditing(d);
     setForm({
-      name: d.name,
-      phone: d.phone ?? "",
-      truckNumber: d.truckNumber ?? "",
-      trailerNumber: d.trailerNumber ?? "",
-      licenseNumber: d.licenseNumber ?? "",
-      status: d.status,
-      notes: d.notes ?? "",
+      name: d.name, phone: d.phone ?? "", email: d.email ?? "",
+      truckNumber: d.truckNumber ?? "", trailerNumber: d.trailerNumber ?? "",
+      licenseNumber: d.licenseNumber ?? "", status: d.status, notes: d.notes ?? "",
     });
     setFormOpen(true);
   }
@@ -78,26 +55,27 @@ export default function DriversPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const url = editing ? `/api/drivers/${editing.id}` : "/api/drivers";
-    const method = editing ? "PATCH" : "POST";
     await fetch(url, {
-      method,
+      method: editing ? "PATCH" : "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form),
     });
     setFormOpen(false);
+    toast.success(editing ? t("updatedOk") : t("createdOk"));
     load();
   }
 
-  async function remove(d: Driver) {
-    if (!confirm(t("confirmDelete"))) return;
+  async function remove(d: any) {
+    const ok = await confirm({ message: t("confirmDelete"), danger: true, confirmText: t("delete") });
+    if (!ok) return;
     await fetch(`/api/drivers/${d.id}`, { method: "DELETE" });
+    toast.success(t("deletedOk"));
     load();
   }
 
-  async function quickStatus(d: Driver, status: string) {
+  async function quickStatus(d: any, status: string) {
     await fetch(`/api/drivers/${d.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      method: "PATCH", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
     load();
@@ -105,89 +83,50 @@ export default function DriversPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">{t("drivers")}</h1>
-        {canManage && (
-          <button onClick={openCreate} className="btn-primary">
-            + {t("newDriver")}
-          </button>
-        )}
-      </div>
+      <PageHeader title={t("drivers")} subtitle={`${drivers.length} ${t("total").toLowerCase()}`}>
+        {canManage && <button onClick={openCreate} className="btn-primary"><Plus size={16} /> {t("newDriver")}</button>}
+      </PageHeader>
 
       {loading ? (
-        <p className="text-slate-400">{t("loading")}</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
+        </div>
       ) : drivers.length === 0 ? (
-        <p className="text-slate-400">{t("noData")}</p>
+        <div className="card"><EmptyState icon={Users} title={t("noData")} /></div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {drivers.map((d) => (
             <div key={d.id} className="card p-4">
               <div className="flex items-start justify-between">
-                <div>
-                  <div className="font-semibold">{d.name}</div>
-                  {d.phone && (
-                    <div className="text-sm text-slate-500">{d.phone}</div>
-                  )}
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-100 font-semibold text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
+                    {d.name.charAt(0)}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-slate-900 dark:text-white">{d.name}</div>
+                    {d.phone && <div className="flex items-center gap-1 text-xs text-slate-500"><Phone size={11} /> {d.phone}</div>}
+                  </div>
                 </div>
-                <span className={`badge ${DRIVER_STATUS_COLORS[d.status]}`}>
-                  {t(d.status)}
-                </span>
+                <span className={`badge ${DRIVER_STATUS_COLORS[d.status]}`}>{t(d.status)}</span>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                {d.truckNumber && (
-                  <div>
-                    <span className="text-slate-400">{t("truckNumber")}: </span>
-                    {d.truckNumber}
-                  </div>
-                )}
-                {d.trailerNumber && (
-                  <div>
-                    <span className="text-slate-400">{t("trailerNumber")}: </span>
-                    {d.trailerNumber}
-                  </div>
-                )}
-                {d.licenseNumber && (
-                  <div className="col-span-2">
-                    <span className="text-slate-400">{t("licenseNumber")}: </span>
-                    {d.licenseNumber}
-                  </div>
-                )}
-                {d._count && (
-                  <div className="col-span-2 text-slate-400">
-                    {t("loads")}: {d._count.loads}
-                  </div>
-                )}
+              <div className="mt-3 space-y-1 text-sm text-slate-600 dark:text-slate-300">
+                {d.truck && <div className="flex items-center gap-1.5"><TruckIcon size={13} className="text-slate-400" /> {d.truck.unitNumber}</div>}
+                {d.licenseNumber && <div className="text-xs text-slate-400">{t("licenseNumber")}: {d.licenseNumber}</div>}
+                {d._count && <div className="text-xs text-slate-400">{t("loads")}: {d._count.loads}</div>}
               </div>
 
               {canManage && (
-                <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-slate-100 pt-3">
+                <div className="mt-3 flex flex-wrap items-center gap-1 border-t border-slate-100 pt-3 dark:border-slate-800">
                   {DRIVER_STATUSES.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => quickStatus(d, s)}
-                      className={`rounded px-2 py-1 text-xs ${
-                        d.status === s
-                          ? DRIVER_STATUS_COLORS[s]
-                          : "text-slate-500 hover:bg-slate-100"
-                      }`}
-                    >
+                    <button key={s} onClick={() => quickStatus(d, s)}
+                      className={`rounded px-2 py-1 text-xs transition ${d.status === s ? DRIVER_STATUS_COLORS[s] : "text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"}`}>
                       {t(s)}
                     </button>
                   ))}
                   <span className="flex-1" />
-                  <button
-                    onClick={() => openEdit(d)}
-                    className="rounded px-2 py-1 text-xs text-brand-600 hover:bg-brand-50"
-                  >
-                    {t("edit")}
-                  </button>
-                  <button
-                    onClick={() => remove(d)}
-                    className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                  >
-                    {t("delete")}
-                  </button>
+                  <button onClick={() => openEdit(d)} className="rounded p-1.5 text-brand-600 hover:bg-brand-50 dark:hover:bg-brand-500/10"><Pencil size={14} /></button>
+                  <button onClick={() => remove(d)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"><Trash2 size={14} /></button>
                 </div>
               )}
             </div>
@@ -196,94 +135,23 @@ export default function DriversPage() {
       )}
 
       {formOpen && (
-        <Modal
-          title={editing ? t("editDriver") : t("newDriver")}
-          onClose={() => setFormOpen(false)}
-        >
+        <Modal title={editing ? t("editDriver") : t("newDriver")} onClose={() => setFormOpen(false)}>
           <form onSubmit={submit} className="space-y-4">
-            <div>
-              <label className="label">{t("name")} *</label>
-              <input
-                className="input"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                required
-              />
-            </div>
+            <div><label className="label">{t("name")} *</label><input className="input" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required /></div>
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="label">{t("phone")}</label>
-                <input
-                  className="input"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="label">{t("driverStatus")}</label>
-                <select
-                  className="input"
-                  value={form.status}
-                  onChange={(e) => setForm({ ...form, status: e.target.value })}
-                >
-                  {DRIVER_STATUSES.map((s) => (
-                    <option key={s} value={s}>
-                      {t(s)}
-                    </option>
-                  ))}
+              <div><label className="label">{t("phone")}</label><input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><label className="label">{t("email")}</label><input className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+              <div><label className="label">{t("driverStatus")}</label>
+                <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                  {DRIVER_STATUSES.map((s) => <option key={s} value={s}>{t(s)}</option>)}
                 </select>
               </div>
-              <div>
-                <label className="label">{t("truckNumber")}</label>
-                <input
-                  className="input"
-                  value={form.truckNumber}
-                  onChange={(e) =>
-                    setForm({ ...form, truckNumber: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="label">{t("trailerNumber")}</label>
-                <input
-                  className="input"
-                  value={form.trailerNumber}
-                  onChange={(e) =>
-                    setForm({ ...form, trailerNumber: e.target.value })
-                  }
-                />
-              </div>
+              <div><label className="label">{t("licenseNumber")}</label><input className="input" value={form.licenseNumber} onChange={(e) => setForm({ ...form, licenseNumber: e.target.value })} /></div>
             </div>
-            <div>
-              <label className="label">{t("licenseNumber")}</label>
-              <input
-                className="input"
-                value={form.licenseNumber}
-                onChange={(e) =>
-                  setForm({ ...form, licenseNumber: e.target.value })
-                }
-              />
-            </div>
-            <div>
-              <label className="label">{t("notes")}</label>
-              <textarea
-                className="input"
-                rows={2}
-                value={form.notes}
-                onChange={(e) => setForm({ ...form, notes: e.target.value })}
-              />
-            </div>
+            <div><label className="label">{t("notes")}</label><textarea className="input" rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <div className="flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setFormOpen(false)}
-                className="btn-secondary"
-              >
-                {t("cancel")}
-              </button>
-              <button type="submit" className="btn-primary">
-                {t("save")}
-              </button>
+              <button type="button" onClick={() => setFormOpen(false)} className="btn-secondary">{t("cancel")}</button>
+              <button type="submit" className="btn-primary">{t("save")}</button>
             </div>
           </form>
         </Modal>

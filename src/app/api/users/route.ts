@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can, ROLES } from "@/lib/constants";
+import { logActivity } from "@/lib/activity";
 
 export async function GET() {
   const session = await getSession();
@@ -52,6 +53,7 @@ export async function POST(req: Request) {
       },
       select: { id: true, name: true, email: true, role: true },
     });
+    await logActivity(session, "created", "user", user.name);
     return NextResponse.json({ user });
   } catch (e: any) {
     if (e.code === "P2002")

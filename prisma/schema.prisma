@@ -12,8 +12,9 @@ datasource db {
 enum Role {
   OWNER // Rahbar — full access
   MANAGER // Menejer — full access
-  DISPATCHER // Dispetcher — create/assign loads, manage drivers
+  DISPATCHER // Dispetcher — create/assign loads, manage drivers & trucks
   UPDATER // Yangilovchi — post status updates
+  ACCOUNTANT // Buxgalter — billing, invoices, reports
   DRIVER // Haydovchi — sees only own loads
 }
 
@@ -31,6 +32,28 @@ enum DriverStatus {
   OFF_DUTY
 }
 
+enum TruckStatus {
+  ACTIVE
+  MAINTENANCE
+  INACTIVE
+}
+
+enum EquipmentType {
+  VAN
+  REEFER
+  FLATBED
+  POWER_ONLY
+  STEP_DECK
+  OTHER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+}
+
 model User {
   id           String   @id @default(cuid())
   name         String
@@ -38,7 +61,6 @@ model User {
   passwordHash String
   role         Role     @default(DISPATCHER)
   phone        String?
-  // If this user is a driver, link to their Driver profile
   driverId     String?  @unique
   driver       Driver?  @relation(fields: [driverId], references: [id])
   createdAt    DateTime @default(now())
@@ -48,6 +70,7 @@ model Driver {
   id            String       @id @default(cuid())
   name          String
   phone         String?
+  email         String?
   truckNumber   String?
   trailerNumber String?
   licenseNumber String?
@@ -57,31 +80,75 @@ model Driver {
 
   account User?
   loads   Load[]
+  truck   Truck?
+}
+
+model Truck {
+  id           String      @id @default(cuid())
+  unitNumber   String      @unique
+  plate        String?
+  make         String?
+  model        String?
+  year         Int?
+  vin          String?
+  status       TruckStatus @default(ACTIVE)
+  notes        String?
+  createdAt    DateTime    @default(now())
+
+  driverId     String?     @unique
+  driver       Driver?     @relation(fields: [driverId], references: [id])
+
+  loads        Load[]
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  name      String
+  contact   String?
+  email     String?
+  phone     String?
+  mcNumber  String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  loads Load[]
 }
 
 model Load {
-  id             String     @id @default(cuid())
-  refNumber      String     @unique
+  id             String        @id @default(cuid())
+  refNumber      String        @unique
   broker         String?
   origin         String
   destination    String
   pickupDate     DateTime?
   deliveryDate   DateTime?
   rate           Float?
+  driverPay      Float?
   miles          Int?
-  status         LoadStatus @default(NEW)
+  weight         Int?
+  commodity      String?
+  equipment      EquipmentType @default(VAN)
+  status         LoadStatus    @default(NEW)
   notes          String?
 
+  customerId     String?
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+
   driverId       String?
-  driver         Driver?    @relation(fields: [driverId], references: [id])
+  driver         Driver?       @relation(fields: [driverId], references: [id])
+
+  truckId        String?
+  truck          Truck?        @relation(fields: [truckId], references: [id])
 
   dispatcherId   String?
   dispatcherName String?
 
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   updates        LoadUpdate[]
+  invoice        Invoice?
 }
 
 model LoadUpdate {
@@ -94,4 +161,30 @@ model LoadUpdate {
   authorId   String?
   authorName String?
   createdAt  DateTime    @default(now())
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  number      String        @unique
+  loadId      String        @unique
+  load        Load          @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  amount      Float
+  status      InvoiceStatus @default(DRAFT)
+  issuedAt    DateTime?
+  dueAt       DateTime?
+  paidAt      DateTime?
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actorName String?
+  action    String // e.g. "created", "updated", "deleted", "status_changed"
+  entity    String // e.g. "load", "driver", "invoice"
+  entityRef String? // human-readable ref (e.g. LD-1001)
+  detail    String?
+  createdAt DateTime @default(now())
 }

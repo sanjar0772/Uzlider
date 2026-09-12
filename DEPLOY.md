@@ -15,10 +15,20 @@ your data persists across deploys.
 ### 3. Set the app service variables
 Open your **app service → Variables** and add:
 
-| Variable        | Value                                  |
-|-----------------|----------------------------------------|
-| `DATABASE_URL`  | `${{ Postgres.DATABASE_URL }}`         |
-| `AUTH_SECRET`   | a long random string (e.g. 40+ chars)  |
+| Variable         | Value                                  |
+|------------------|----------------------------------------|
+| `DATABASE_URL`   | `${{ Postgres.DATABASE_URL }}`         |
+| `AUTH_SECRET`    | a long random string (e.g. 40+ chars)  |
+| `ADMIN_EMAIL`    | your login email (e.g. you@company.com)|
+| `ADMIN_PASSWORD` | your initial password                  |
+
+> `ADMIN_EMAIL` / `ADMIN_PASSWORD` create your first Owner account on the very
+> first boot. If you skip them, a default `admin@uzlider.com` / `admin123` is
+> created — change it immediately from the Profile page.
+>
+> **Clearing old demo data:** if your database still has demo records from an
+> earlier deploy, add `RESET_DEMO` = `true` once, redeploy (it wipes everything
+> and recreates just your admin), then delete the `RESET_DEMO` variable.
 
 > `${{ Postgres.DATABASE_URL }}` is a Railway reference — it auto-links to the
 > Postgres service you just added. Type it exactly like that.
@@ -38,18 +48,12 @@ Railway runs:
 That's it. The first boot creates the schema and seeds the five role accounts.
 
 ### 5. Log in
-Open the deployed URL and sign in with a demo account:
+Open the deployed URL and sign in with your Owner account:
+- the `ADMIN_EMAIL` / `ADMIN_PASSWORD` you set, or
+- the default `admin@uzlider.com` / `admin123` if you didn't.
 
-| Role       | Email                | Password      |
-|------------|----------------------|---------------|
-| Owner      | owner@uzlider.com    | `owner123`    |
-| Manager    | manager@uzlider.com  | `manager123`  |
-| Dispatcher | dispatch@uzlider.com | `dispatch123` |
-| Updater    | updater@uzlider.com  | `updater123`  |
-| Driver     | driver@uzlider.com   | `driver123`   |
-
-> **Security:** change these demo passwords (and create real accounts) from the
-> **Users** page after your first login as Owner.
+Then, as Owner, create real staff accounts (managers, dispatchers, drivers…)
+from the **Users** page, and change your own password on the **Profile** page.
 
 ## Notes
 - The seed only runs when the database has **no users**, so redeploys never wipe

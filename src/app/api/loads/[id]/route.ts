@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { can } from "@/lib/constants";
+import { logActivity } from "@/lib/activity";
 
 export async function GET(
   _req: Request,
@@ -12,7 +13,13 @@ export async function GET(
 
   const load = await prisma.load.findUnique({
     where: { id: params.id },
-    include: { driver: true, updates: { orderBy: { createdAt: "desc" } } },
+    include: {
+      driver: true,
+      truck: true,
+      customer: true,
+      invoice: true,
+      updates: { orderBy: { createdAt: "desc" } },
+    },
   });
   if (!load) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -34,8 +41,6 @@ export async function PATCH(
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const body = await req.json();
-
-  // Drivers may only change the status of their own load (via updates), not edit fields.
   const isFullEditor = can.editLoad(session.role);
   const data: any = {};
 
@@ -49,12 +54,19 @@ export async function PATCH(
     if (body.deliveryDate !== undefined)
       data.deliveryDate = body.deliveryDate ? new Date(body.deliveryDate) : null;
     if (body.rate !== undefined) data.rate = body.rate ? Number(body.rate) : null;
+    if (body.driverPay !== undefined)
+      data.driverPay = body.driverPay ? Number(body.driverPay) : null;
     if (body.miles !== undefined) data.miles = body.miles ? Number(body.miles) : null;
+    if (body.weight !== undefined)
+      data.weight = body.weight ? Number(body.weight) : null;
+    if (body.commodity !== undefined) data.commodity = body.commodity || null;
+    if (body.equipment !== undefined) data.equipment = body.equipment;
     if (body.notes !== undefined) data.notes = body.notes || null;
+    if (body.customerId !== undefined) data.customerId = body.customerId || null;
     if (body.driverId !== undefined) data.driverId = body.driverId || null;
+    if (body.truckId !== undefined) data.truckId = body.truckId || null;
   }
 
-  // Status can be changed by updaters/drivers too
   if (body.status !== undefined && can.updateStatus(session.role)) {
     if (session.role === "DRIVER" && existing.driverId !== session.driverId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -68,6 +80,13 @@ export async function PATCH(
 
   try {
     const load = await prisma.load.update({ where: { id: params.id }, data });
+    await logActivity(
+      session,
+      data.status && Object.keys(data).length === 1 ? "status_changed" : "updated",
+      "load",
+      load.refNumber,
+      data.status ? `→ ${data.status}` : null
+    );
     return NextResponse.json({ load });
   } catch (e: any) {
     if (e.code === "P2002")
@@ -85,6 +104,8 @@ export async function DELETE(
   if (!can.deleteLoad(session.role))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
+  const load = await prisma.load.findUnique({ where: { id: params.id } });
   await prisma.load.delete({ where: { id: params.id } });
+  await logActivity(session, "deleted", "load", load?.refNumber);
   return NextResponse.json({ ok: true });
 }
