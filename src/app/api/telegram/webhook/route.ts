@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { sendTelegramMessage } from "@/lib/telegram";
+import { sendTelegramMessage, getTelegramFileDataUrl } from "@/lib/telegram";
+import { aiConfigured, extractLoadFromDocument } from "@/lib/ai";
+import { matchCustomer, findDuplicate, profitCheck, fallbackRef } from "@/lib/loadExtract";
+import { can } from "@/lib/constants";
+import { logActivity } from "@/lib/activity";
 
 // ---------------------------------------------------------------------------
 // Telegram webhook — inbound updates from the bot.
@@ -58,8 +62,23 @@ export async function POST(req: Request) {
 
   const msg = update?.message ?? update?.edited_message;
   const chatId = msg?.chat?.id;
+  if (!chatId) return NextResponse.json({ ok: true });
+
+  // --- Photo / document intake: forward a rate con to auto-create a load ------
+  const photo = Array.isArray(msg?.photo) && msg.photo.length ? msg.photo[msg.photo.length - 1] : null;
+  const doc =
+    msg?.document &&
+    (String(msg.document.mime_type).startsWith("image/") ||
+      msg.document.mime_type === "application/pdf")
+      ? msg.document
+      : null;
+  if (photo || doc) {
+    await handleMediaIntake(token, chatId, msg, photo, doc);
+    return NextResponse.json({ ok: true });
+  }
+
   const text: string = (msg?.text ?? "").trim();
-  if (!chatId || !text) return NextResponse.json({ ok: true });
+  if (!text) return NextResponse.json({ ok: true });
 
   const [rawCmd, ...args] = text.split(/\s+/);
   const cmd = rawCmd.toLowerCase().replace(/@.*$/, ""); // strip @botname suffix
@@ -71,6 +90,7 @@ export async function POST(req: Request) {
         token,
         chatId,
         `👋 <b>${esc(settings.companyName || "TMS")} bot</b>\n\n` +
+          `📸 Send a rate con photo or PDF → I'll create a draft load\n\n` +
           `/link CODE — connect your account (get the code in Profile)\n` +
           `/status REF — load status by ref #\n` +
           `/mine — your active loads\n` +
@@ -173,4 +193,134 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+// Read a rate confirmation photo/PDF sent to the bot and create a draft load,
+// flagged needsReview so a dispatcher verifies it on the board. Requires the
+// sender to be a linked user who is allowed to create loads.
+async function handleMediaIntake(
+  token: string,
+  chatId: number | string,
+  msg: any,
+  photo: any,
+  doc: any
+) {
+  try {
+    const user = await prisma.user.findFirst({ where: { telegramChatId: String(chatId) } });
+    if (!user) {
+      reply(token, chatId, "🔒 Link your account first: /link CODE");
+      return;
+    }
+    if (!can.createLoad(user.role)) {
+      reply(token, chatId, "🔒 You don't have permission to create loads.");
+      return;
+    }
+    if (!aiConfigured()) {
+      reply(token, chatId, "⚠️ AI intake isn't configured on the server.");
+      return;
+    }
+
+    reply(token, chatId, "📸 Reading your document…");
+
+    const fileId = doc?.file_id ?? photo?.file_id;
+    const file = await getTelegramFileDataUrl(token, fileId, doc?.mime_type);
+    if (!file) {
+      reply(token, chatId, "❌ Couldn't download the file (too large or unavailable).");
+      return;
+    }
+
+    let x;
+    try {
+      x = await extractLoadFromDocument(file.dataUrl, file.mimeType);
+    } catch {
+      reply(token, chatId, "❌ Couldn't read the load from that document. Try a clearer photo.");
+      return;
+    }
+
+    // Duplicate guard by reference number — never silently double-book.
+    const dup = await findDuplicate(x);
+    if (dup && dup.reason === "ref") {
+      reply(token, chatId, `⚠️ Load <b>${esc(dup.refNumber)}</b> already exists. Skipped.`);
+      return;
+    }
+
+    const [customer, profit] = await Promise.all([
+      matchCustomer(x.broker),
+      profitCheck(x.rate, x.miles),
+    ]);
+
+    const refNumber = x.refNumber?.trim() || fallbackRef();
+    let load;
+    try {
+      load = await prisma.load.create({
+        data: {
+          refNumber,
+          broker: customer ? null : x.broker,
+          customerId: customer?.id ?? null,
+          origin: x.origin || "—",
+          destination: x.destination || "—",
+          pickupDate: x.pickupDate ? new Date(x.pickupDate) : null,
+          deliveryDate: x.deliveryDate ? new Date(x.deliveryDate) : null,
+          rate: x.rate,
+          miles: x.miles,
+          weight: x.weight,
+          commodity: x.commodity,
+          equipment: (x.equipment as any) ?? "VAN",
+          detention: x.detention,
+          lumperFee: x.lumperFee,
+          notes: x.notes,
+          status: "NEW",
+          dispatcherId: user.id,
+          dispatcherName: user.name,
+          aiGenerated: true,
+          needsReview: true,
+          source: "telegram",
+        },
+      });
+    } catch (e: any) {
+      reply(
+        token,
+        chatId,
+        e?.code === "P2002"
+          ? `⚠️ Load <b>${esc(refNumber)}</b> already exists. Skipped.`
+          : "❌ Couldn't create the load. Try again."
+      );
+      return;
+    }
+
+    // Attach the original document to the load. Awaited: in a serverless
+    // handler an unawaited write can be cut off once we return 200.
+    await prisma.document
+      .create({
+        data: {
+          name: doc?.file_name || `telegram-${refNumber}.${file.mimeType.split("/").pop()}`,
+          category: "RATE_CON",
+          mimeType: file.mimeType,
+          size: doc?.file_size || 0,
+          dataUrl: file.dataUrl,
+          loadId: load.id,
+          uploadedById: user.id,
+          uploadedByName: user.name,
+        },
+      })
+      .catch(() => {});
+
+    await logActivity({ id: user.id, name: user.name, role: user.role } as any, "ai_extracted", "load", refNumber, "telegram");
+
+    const rateLine = x.rate ? ` • $${Math.round(x.rate).toLocaleString("en-US")}` : "";
+    const rpmLine =
+      profit && profit.belowTarget
+        ? `\n⚠️ Low rate: $${profit.rpm.toFixed(2)}/mi (target $${profit.targetRpm.toFixed(2)})`
+        : "";
+    const custLine = customer ? `\n🏢 ${esc(customer.name)}` : x.broker ? `\n🏢 ${esc(x.broker)} (new)` : "";
+    reply(
+      token,
+      chatId,
+      `✅ <b>Draft load ${esc(refNumber)}</b> created${rateLine}\n` +
+        `${esc(x.origin || "—")} → ${esc(x.destination || "—")}${custLine}${rpmLine}\n` +
+        `🤖 Please review it on the board before dispatching.`
+    );
+  } catch {
+    // Swallow — Telegram must always get a 200.
+  }
 }

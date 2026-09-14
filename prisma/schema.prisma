@@ -193,6 +193,14 @@ model Load {
   dispatcherId   String?
   dispatcherName String?
 
+  // ---- AI document intake ----
+  // Loads generated from a rate confirmation by the AI extractor. `needsReview`
+  // flags an unreviewed draft (e.g. created straight from Telegram) that a
+  // dispatcher should still verify. `source` records where it came from.
+  aiGenerated Boolean @default(false)
+  needsReview Boolean @default(false)
+  source      String? // "manual" | "board-import" | "telegram"
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

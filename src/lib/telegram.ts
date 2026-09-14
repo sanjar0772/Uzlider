@@ -79,6 +79,42 @@ export async function notifyTelegram(text: string): Promise<void> {
   await sendTelegramRaw(cfg.token, cfg.chatId, text);
 }
 
+// Download a file the user sent to the bot and return it as a base64 data URL,
+// ready for the AI extractor. Uses getFile → file download. Never throws.
+export async function getTelegramFileDataUrl(
+  token: string,
+  fileId: string,
+  mimeHint?: string
+): Promise<{ dataUrl: string; mimeType: string } | null> {
+  try {
+    const info = await fetch(`https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`, {
+      signal: AbortSignal.timeout(8000),
+    }).then((r) => r.json());
+    const path = info?.result?.file_path;
+    if (!path) return null;
+    const res = await fetch(`https://api.telegram.org/file/bot${token}/${path}`, {
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) return null;
+    const buf = Buffer.from(await res.arrayBuffer());
+    // 6 MB cap to match inline document storage.
+    if (buf.length > 6 * 1024 * 1024) return null;
+    const ext = String(path).split(".").pop()?.toLowerCase();
+    const mimeType =
+      mimeHint ||
+      (ext === "pdf"
+        ? "application/pdf"
+        : ext === "png"
+        ? "image/png"
+        : ext === "webp"
+        ? "image/webp"
+        : "image/jpeg");
+    return { dataUrl: `data:${mimeType};base64,${buf.toString("base64")}`, mimeType };
+  } catch {
+    return null;
+  }
+}
+
 export function escapeHtml(s: unknown): string {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }

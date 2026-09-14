@@ -8,6 +8,7 @@ import { can, LOAD_STATUS_COLORS } from "@/lib/constants";
 import { money } from "@/lib/format";
 import { PageHeader, Skeleton } from "@/components/ui";
 import DispatchTimeline from "@/components/DispatchTimeline";
+import RateConImport from "@/components/RateConImport";
 
 const COLUMNS = ["NEW", "ASSIGNED", "IN_TRANSIT", "DELIVERED"] as const;
 
@@ -61,6 +62,7 @@ export default function BoardPage() {
   return (
     <div className="space-y-4">
       <PageHeader title={t("dispatchBoard")} subtitle={`${loads.length} ${t("loads").toLowerCase()}`}>
+        {can.createLoad(role) && <RateConImport drivers={drivers} onCreated={load} />}
         <div className="inline-flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-600">
           <button onClick={() => setView("board")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm ${view === "board" ? "bg-brand-600 text-white" : "text-slate-600 dark:text-slate-300"}`}><Columns3 size={15} /> {t("dispatchBoard")}</button>
           <button onClick={() => setView("timeline")} className={`flex items-center gap-1.5 px-3 py-1.5 text-sm ${view === "timeline" ? "bg-brand-600 text-white" : "text-slate-600 dark:text-slate-300"}`}><GanttChartSquare size={15} /> Timeline</button>
@@ -93,7 +95,12 @@ export default function BoardPage() {
                         {showFin && <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">{money(l.rate)}</span>}
                       </div>
                       <div className="mt-1 text-xs text-slate-500">{l.origin} → {l.destination}</div>
-                      <div className="mt-1 text-xs text-slate-400">{l.customer?.name ?? l.broker ?? ""}</div>
+                      <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+                        <span>{l.customer?.name ?? l.broker ?? ""}</span>
+                        {l.needsReview && (
+                          <span className="badge bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">🤖 {t("needsReview")}</span>
+                        )}
+                      </div>
 
                       {col === "NEW" && canEdit ? (
                         <select className="input mt-2 !py-1 text-xs" value={l.driverId ?? ""} onChange={(e) => assign(l, e.target.value)}>

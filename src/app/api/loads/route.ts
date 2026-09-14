@@ -84,6 +84,9 @@ export async function POST(req: Request) {
         dispatcherId: session.id,
         dispatcherName: session.name,
         notes: body.notes || null,
+        aiGenerated: Boolean(body.aiGenerated),
+        needsReview: Boolean(body.needsReview),
+        source: body.source || "manual",
       },
     });
     await logActivity(session, "created", "load", load.refNumber);
