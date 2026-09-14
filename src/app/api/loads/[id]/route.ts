@@ -20,6 +20,7 @@ export async function GET(
       customer: true,
       invoice: true,
       updates: { orderBy: { createdAt: "desc" } },
+      stops: { orderBy: { sequence: "asc" } },
     },
   });
   if (!load) return NextResponse.json({ error: "Not found" }, { status: 404 });

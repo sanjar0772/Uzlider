@@ -22,6 +22,11 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Radio,
+  TrendingUp,
+  Fuel,
+  Wrench,
+  Receipt,
+  Wallet,
   type LucideIcon,
 } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
@@ -63,11 +68,16 @@ export default function DashboardShell({
     { href: "/dashboard/board", label: t("dispatchBoard"), icon: Columns3, show: staff, group: "operations" },
     { href: "/dashboard/tracking", label: t("liveTracking"), icon: Radio, show: staff, group: "operations" },
     { href: "/dashboard/loads", label: t("loads"), icon: Package, show: true, group: "operations" },
+    { href: "/dashboard/analytics", label: t("analytics"), icon: TrendingUp, show: can.viewAnalytics(user.role), group: "operations" },
     { href: "/dashboard/drivers", label: t("drivers"), icon: Users, show: staff, group: "fleet" },
     { href: "/dashboard/trucks", label: t("trucks"), icon: Truck, show: staff, group: "fleet" },
+    { href: "/dashboard/maintenance", label: t("maintenance"), icon: Wrench, show: can.viewMaintenance(user.role), group: "fleet" },
+    { href: "/dashboard/fuel", label: t("fuel"), icon: Fuel, show: can.viewFuel(user.role) || user.role === "DRIVER", group: "fleet" },
     { href: "/dashboard/compliance", label: t("compliance"), icon: ShieldCheck, show: staff, group: "fleet" },
     { href: "/dashboard/customers", label: t("customers"), icon: Building2, show: staff, group: "finance" },
     { href: "/dashboard/invoices", label: t("invoices"), icon: FileText, show: can.viewInvoices(user.role), group: "finance" },
+    { href: "/dashboard/expenses", label: t("expenses"), icon: Receipt, show: can.viewExpenses(user.role), group: "finance" },
+    { href: "/dashboard/settlements", label: t("settlements"), icon: Wallet, show: can.viewSettlements(user.role), group: "finance" },
     { href: "/dashboard/reports", label: t("reports"), icon: BarChart3, show: can.viewReports(user.role), group: "finance" },
     { href: "/dashboard/users", label: t("users"), icon: UserCog, show: can.manageUsers(user.role), group: "admin" },
     { href: "/dashboard/settings", label: t("settings"), icon: SlidersHorizontal, show: can.manageUsers(user.role), group: "admin" },
@@ -184,7 +194,7 @@ export default function DashboardShell({
             </button>
           </div>
           <div className="flex items-center gap-2">
-            {staff && <Notifications />}
+            <Notifications />
             <button
               onClick={toggle}
               className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"

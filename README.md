@@ -24,6 +24,25 @@ Trilingual interface: **English / Русский / O'zbekcha** (switch in the to
 - **Customers** — brokers/shippers with contacts and MC #
 - **Invoices** — billing per load, mark sent/paid, outstanding tracking
 - **Reports** — revenue by month, by driver, by status (Accountant+)
+- **Analytics** — driver scorecards (revenue, profit, RPM, deadhead %,
+  on-time %), 6/12-month revenue & profit trend, real expense mix, top lanes,
+  and true cost-per-mile with logged expenses & fuel folded in
+- **Expenses** — full ledger with categories, vendor, and attribution to a
+  truck, driver or load; per-category breakdown
+- **Fuel & IFTA** — log every fuel stop (gallons, $/gal, state, odometer);
+  drivers log their own; per-jurisdiction IFTA fuel summary by quarter
+- **Maintenance** — per-truck service & repair log with cost tracking and
+  next-service reminders that surface in notifications
+- **Driver settlements** — payroll per driver from delivered loads, less
+  attributed expense deductions, with an expandable load breakdown
+- **Documents** — upload BOL / POD / rate confirmations and more against a
+  load (stored inline, no external bucket needed); download or delete
+- **Multi-stop loads** — add pickup/drop-off stops to any load and check
+  them off as the driver progresses
+- **PDF documents** — one-click Rate confirmation, Dispatch sheet and
+  Invoice printing (browser "Save as PDF", no dependencies)
+- **Smart notifications** — live alert bell for expiring compliance docs,
+  unassigned loads, overdue invoices, maintenance due and loss-making loads
 - **Activity log** — who changed what (Owner/Manager)
 - **Live GPS tracking** — drivers turn on location sharing from a one-tap
   control; dispatchers see the whole fleet on a live, auto-refreshing map

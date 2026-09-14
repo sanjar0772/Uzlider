@@ -2,10 +2,37 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell, ShieldAlert, Package, FileClock } from "lucide-react";
+import { Bell, ShieldAlert, Package, FileClock, Wrench, TrendingDown, Info } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 
-type Alert = { icon: any; text: string; href: string; tone: string };
+type Alert = { key: string; tone: string; title: string; href: string };
+
+const TONE_ICON: Record<string, any> = {
+  danger: ShieldAlert,
+  warning: Wrench,
+  info: Package,
+  success: Info,
+};
+const TONE_COLOR: Record<string, string> = {
+  danger: "text-red-500",
+  warning: "text-amber-500",
+  info: "text-brand-500",
+  success: "text-emerald-500",
+};
+
+// Turn "3::expired::compliance" into "3 Expired — Documents" using i18n.
+function render(title: string, t: (k: string) => string): string {
+  const [count, key, suffix] = title.split("::");
+  const base = `${count} ${key ? t(key) : ""}`.trim();
+  return suffix ? `${base} — ${t(suffix)}` : base;
+}
+
+function iconFor(a: Alert) {
+  if (a.key.startsWith("overdue")) return FileClock;
+  if (a.key.startsWith("maint")) return Wrench;
+  if (a.key.startsWith("losing")) return TrendingDown;
+  return TONE_ICON[a.tone] ?? Info;
+}
 
 export default function Notifications() {
   const { t } = useI18n();
@@ -14,25 +41,15 @@ export default function Notifications() {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    (async () => {
-      const list: Alert[] = [];
-      const stats = await fetch("/api/stats").then((r) => r.json()).catch(() => null);
-      if (stats?.compliance) {
-        const c = stats.compliance;
-        if (c.expired > 0) list.push({ icon: ShieldAlert, text: `${c.expired} ${t("expired")} — ${t("documents")}`, href: "/dashboard/compliance", tone: "text-red-500" });
-        if (c.expiringSoon > 0) list.push({ icon: ShieldAlert, text: `${c.expiringSoon} ${t("expiringSoon")} — ${t("documents")}`, href: "/dashboard/compliance", tone: "text-amber-500" });
-      }
-      if (stats?.counts?.unassigned > 0)
-        list.push({ icon: Package, text: `${stats.counts.unassigned} ${t("unassignedLoads")}`, href: "/dashboard/board", tone: "text-brand-500" });
-      const inv = await fetch("/api/invoices").then((r) => r.json()).catch(() => null);
-      if (inv?.invoices) {
-        const now = Date.now();
-        const overdue = inv.invoices.filter((i: any) => i.status !== "PAID" && i.dueAt && new Date(i.dueAt).getTime() < now).length;
-        if (overdue > 0) list.push({ icon: FileClock, text: `${overdue} ${t("OVERDUE")} — ${t("invoices")}`, href: "/dashboard/invoices", tone: "text-red-500" });
-      }
-      setAlerts(list);
-    })();
-  }, [t]);
+    let active = true;
+    const fetchAlerts = async () => {
+      const res = await fetch("/api/notifications").then((r) => r.json()).catch(() => null);
+      if (active && res?.alerts) setAlerts(res.alerts);
+    };
+    fetchAlerts();
+    const id = setInterval(fetchAlerts, 60000); // refresh every minute
+    return () => { active = false; clearInterval(id); };
+  }, []);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -55,12 +72,12 @@ export default function Notifications() {
           <div className="border-b border-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-900 dark:border-slate-800 dark:text-white">{t("needsAttention")}</div>
           <div className="max-h-80 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
             {alerts.length === 0 && <p className="px-4 py-6 text-center text-sm text-slate-400">{t("healthy")} ✓</p>}
-            {alerts.map((a, i) => {
-              const Icon = a.icon;
+            {alerts.map((a) => {
+              const Icon = iconFor(a);
               return (
-                <Link key={i} href={a.href} onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <Icon size={16} className={a.tone} />
-                  <span className="text-sm text-slate-700 dark:text-slate-200">{a.text}</span>
+                <Link key={a.key} href={a.href} onClick={() => setOpen(false)} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <Icon size={16} className={TONE_COLOR[a.tone] ?? "text-slate-400"} />
+                  <span className="text-sm text-slate-700 dark:text-slate-200">{render(a.title, t)}</span>
                 </Link>
               );
             })}

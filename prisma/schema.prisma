@@ -55,50 +55,53 @@ enum InvoiceStatus {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(DISPATCHER)
-  phone        String?
-  driverId     String?  @unique
-  driver       Driver?  @relation(fields: [driverId], references: [id])
+  id               String   @id @default(cuid())
+  name             String
+  email            String   @unique
+  passwordHash     String
+  role             Role     @default(DISPATCHER)
+  phone            String?
+  driverId         String?  @unique
+  driver           Driver?  @relation(fields: [driverId], references: [id])
   // Telegram account linking
-  telegramChatId   String? @unique
+  telegramChatId   String?  @unique
   telegramUsername String?
-  telegramLinkCode String? @unique
-  createdAt    DateTime @default(now())
+  telegramLinkCode String?  @unique
+  createdAt        DateTime @default(now())
 }
 
 model Driver {
-  id            String       @id @default(cuid())
-  name          String
-  phone         String?
-  email         String?
-  truckNumber   String?
-  trailerNumber String?
-  licenseNumber String?
-  status        DriverStatus @default(AVAILABLE)
-  notes         String?
+  id             String       @id @default(cuid())
+  name           String
+  phone          String?
+  email          String?
+  truckNumber    String?
+  trailerNumber  String?
+  licenseNumber  String?
+  status         DriverStatus @default(AVAILABLE)
+  notes          String?
   // Compliance & HOS
   cdlExpiry      DateTime?
   medicalExpiry  DateTime?
   hireDate       DateTime?
-  availableHours Float?    @default(70) // HOS cycle hours remaining (simplified)
+  availableHours Float?       @default(70) // HOS cycle hours remaining (simplified)
   homeBase       String?
   // ---- Live GPS location (latest known position) ----
-  gpsEnabled       Boolean   @default(false) // driver opted in to share location
-  lastLat          Float?
-  lastLng          Float?
-  lastSpeed        Float?    // meters/second, from device (optional)
-  lastHeading      Float?    // degrees, from device (optional)
-  lastLocationAt   DateTime?
-  createdAt     DateTime     @default(now())
+  gpsEnabled     Boolean      @default(false) // driver opted in to share location
+  lastLat        Float?
+  lastLng        Float?
+  lastSpeed      Float? // meters/second, from device (optional)
+  lastHeading    Float? // degrees, from device (optional)
+  lastLocationAt DateTime?
+  createdAt      DateTime     @default(now())
 
-  account   User?
-  loads     Load[]
-  truck     Truck?
-  locations LocationPing[]
+  account       User?
+  loads         Load[]
+  truck         Truck?
+  locations     LocationPing[]
+  fuelPurchases FuelPurchase[]
+  expenses      Expense[]
+  documents     Document[]
 }
 
 // Historical GPS breadcrumb trail for a driver.
@@ -116,27 +119,31 @@ model LocationPing {
 }
 
 model Truck {
-  id           String      @id @default(cuid())
-  unitNumber   String      @unique
-  plate        String?
-  make         String?
-  model        String?
-  year         Int?
-  vin          String?
-  status       TruckStatus @default(ACTIVE)
-  notes        String?
+  id                 String      @id @default(cuid())
+  unitNumber         String      @unique
+  plate              String?
+  make               String?
+  model              String?
+  year               Int?
+  vin                String?
+  status             TruckStatus @default(ACTIVE)
+  notes              String?
   // Fuel & compliance
-  odometer            Int?
-  mpg                 Float?
-  registrationExpiry  DateTime?
-  inspectionExpiry    DateTime?
-  insuranceExpiry     DateTime?
-  createdAt    DateTime    @default(now())
+  odometer           Int?
+  mpg                Float?
+  registrationExpiry DateTime?
+  inspectionExpiry   DateTime?
+  insuranceExpiry    DateTime?
+  createdAt          DateTime    @default(now())
 
-  driverId     String?     @unique
-  driver       Driver?     @relation(fields: [driverId], references: [id])
+  driverId String? @unique
+  driver   Driver? @relation(fields: [driverId], references: [id])
 
-  loads        Load[]
+  loads         Load[]
+  maintenance   MaintenanceRecord[]
+  fuelPurchases FuelPurchase[]
+  expenses      Expense[]
+  documents     Document[]
 }
 
 model Customer {
@@ -154,43 +161,47 @@ model Customer {
 }
 
 model Load {
-  id             String        @id @default(cuid())
-  refNumber      String        @unique
-  broker         String?
-  origin         String
-  destination    String
-  pickupDate     DateTime?
-  deliveryDate   DateTime?
-  rate           Float?
-  driverPay      Float?
-  miles          Int?
-  deadheadMiles  Int?
-  detention      Float?
-  lumperFee      Float?
-  otherCharges   Float?
-  weight         Int?
-  commodity      String?
-  equipment      EquipmentType @default(VAN)
-  status         LoadStatus    @default(NEW)
-  notes          String?
+  id            String        @id @default(cuid())
+  refNumber     String        @unique
+  broker        String?
+  origin        String
+  destination   String
+  pickupDate    DateTime?
+  deliveryDate  DateTime?
+  rate          Float?
+  driverPay     Float?
+  miles         Int?
+  deadheadMiles Int?
+  detention     Float?
+  lumperFee     Float?
+  otherCharges  Float?
+  weight        Int?
+  commodity     String?
+  equipment     EquipmentType @default(VAN)
+  status        LoadStatus    @default(NEW)
+  notes         String?
 
-  customerId     String?
-  customer       Customer?     @relation(fields: [customerId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
 
-  driverId       String?
-  driver         Driver?       @relation(fields: [driverId], references: [id])
+  driverId String?
+  driver   Driver? @relation(fields: [driverId], references: [id])
 
-  truckId        String?
-  truck          Truck?        @relation(fields: [truckId], references: [id])
+  truckId String?
+  truck   Truck?  @relation(fields: [truckId], references: [id])
 
   dispatcherId   String?
   dispatcherName String?
 
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  updates        LoadUpdate[]
-  invoice        Invoice?
+  updates       LoadUpdate[]
+  invoice       Invoice?
+  stops         LoadStop[]
+  documents     Document[]
+  fuelPurchases FuelPurchase[]
+  expenses      Expense[]
 }
 
 model LoadUpdate {
@@ -206,39 +217,39 @@ model LoadUpdate {
 }
 
 model Invoice {
-  id          String        @id @default(cuid())
-  number      String        @unique
-  loadId      String        @unique
-  load        Load          @relation(fields: [loadId], references: [id], onDelete: Cascade)
-  amount      Float
-  status      InvoiceStatus @default(DRAFT)
-  issuedAt    DateTime?
-  dueAt       DateTime?
-  paidAt      DateTime?
-  factored    Boolean       @default(false)
-  notes       String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id        String        @id @default(cuid())
+  number    String        @unique
+  loadId    String        @unique
+  load      Load          @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  amount    Float
+  status    InvoiceStatus @default(DRAFT)
+  issuedAt  DateTime?
+  dueAt     DateTime?
+  paidAt    DateTime?
+  factored  Boolean       @default(false)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 // Company-wide cost assumptions used to compute per-load profit.
 model CompanySettings {
-  id                String   @id @default(cuid())
-  companyName       String   @default("Uzlider Trucking")
-  mpg               Float    @default(6.5)
-  fuelPricePerGallon Float   @default(4.10)
-  fixedCostPerMile  Float    @default(0.35)
-  targetRpm         Float    @default(2.00)
-  factoringRatePct  Float    @default(3.0)
+  id                 String   @id @default(cuid())
+  companyName        String   @default("Uzlider Trucking")
+  mpg                Float    @default(6.5)
+  fuelPricePerGallon Float    @default(4.10)
+  fixedCostPerMile   Float    @default(0.35)
+  targetRpm          Float    @default(2.00)
+  factoringRatePct   Float    @default(3.0)
   // ---- Telegram integration ----
-  telegramEnabled   Boolean  @default(false)
-  telegramBotToken  String?
-  telegramChatId    String?  // dispatch group / channel id for broadcasts
-  notifyNewLoad     Boolean  @default(true)
-  notifyStatus      Boolean  @default(true)
-  notifyInvoicePaid Boolean  @default(true)
-  notifyCompliance  Boolean  @default(true)
-  updatedAt         DateTime @updatedAt @default(now())
+  telegramEnabled    Boolean  @default(false)
+  telegramBotToken   String?
+  telegramChatId     String? // dispatch group / channel id for broadcasts
+  notifyNewLoad      Boolean  @default(true)
+  notifyStatus       Boolean  @default(true)
+  notifyInvoicePaid  Boolean  @default(true)
+  notifyCompliance   Boolean  @default(true)
+  updatedAt          DateTime @default(now()) @updatedAt
 }
 
 model Activity {
@@ -250,4 +261,178 @@ model Activity {
   entityRef String? // human-readable ref (e.g. LD-1001)
   detail    String?
   createdAt DateTime @default(now())
+}
+
+// =====================================================================
+//  Operational + financial depth: stops, documents, fuel, maintenance,
+//  expenses and notifications.
+// =====================================================================
+
+enum StopType {
+  PICKUP
+  DROPOFF
+}
+
+// A single leg in a multi-stop load. A simple origin→destination load has
+// zero stops; add stops to model milk-runs and multi-drop lanes.
+model LoadStop {
+  id          String    @id @default(cuid())
+  loadId      String
+  load        Load      @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  type        StopType  @default(DROPOFF)
+  sequence    Int       @default(0)
+  location    String
+  contact     String?
+  scheduledAt DateTime?
+  arrivedAt   DateTime?
+  completedAt DateTime?
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  @@index([loadId, sequence])
+}
+
+enum DocCategory {
+  RATE_CON
+  BOL
+  POD
+  INVOICE
+  INSURANCE
+  REGISTRATION
+  CDL
+  MEDICAL
+  OTHER
+}
+
+// Uploaded file, stored inline as a data URL so no external object store is
+// required. Kept small (see the API size cap). Attach to a load, driver or truck.
+model Document {
+  id             String      @id @default(cuid())
+  name           String
+  category       DocCategory @default(OTHER)
+  mimeType       String
+  size           Int         @default(0)
+  dataUrl        String // data:<mime>;base64,<...>
+  loadId         String?
+  load           Load?       @relation(fields: [loadId], references: [id], onDelete: Cascade)
+  driverId       String?
+  driver         Driver?     @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  truckId        String?
+  truck          Truck?      @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  uploadedById   String?
+  uploadedByName String?
+  createdAt      DateTime    @default(now())
+
+  @@index([loadId])
+  @@index([driverId])
+  @@index([truckId])
+}
+
+// Fuel purchase — feeds fuel-cost analytics and per-state IFTA reporting.
+model FuelPurchase {
+  id             String   @id @default(cuid())
+  date           DateTime @default(now())
+  gallons        Float
+  pricePerGallon Float
+  total          Float
+  state          String? // 2-letter US/CA jurisdiction code for IFTA
+  location       String?
+  odometer       Int?
+  truckId        String?
+  truck          Truck?   @relation(fields: [truckId], references: [id])
+  driverId       String?
+  driver         Driver?  @relation(fields: [driverId], references: [id])
+  loadId         String?
+  load           Load?    @relation(fields: [loadId], references: [id])
+  createdById    String?
+  createdByName  String?
+  createdAt      DateTime @default(now())
+
+  @@index([date])
+  @@index([truckId])
+  @@index([state])
+}
+
+enum MaintenanceType {
+  SERVICE
+  REPAIR
+  INSPECTION
+  TIRES
+  OTHER
+}
+
+// Truck maintenance / repair log with optional next-service reminders that
+// surface on the compliance page and in notifications.
+model MaintenanceRecord {
+  id                  String          @id @default(cuid())
+  truckId             String
+  truck               Truck           @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  date                DateTime        @default(now())
+  type                MaintenanceType @default(SERVICE)
+  description         String
+  odometer            Int?
+  cost                Float?
+  vendor              String?
+  nextServiceDate     DateTime?
+  nextServiceOdometer Int?
+  createdById         String?
+  createdByName       String?
+  createdAt           DateTime        @default(now())
+
+  @@index([truckId, date])
+}
+
+enum ExpenseCategory {
+  FUEL
+  MAINTENANCE
+  TOLLS
+  INSURANCE
+  PERMITS
+  LODGING
+  FOOD
+  OFFICE
+  PARKING
+  FINES
+  DISPATCH_FEE
+  OTHER
+}
+
+// General ledger of company expenses, optionally attributed to a truck,
+// driver or load so per-unit and per-load true cost can be computed.
+model Expense {
+  id            String          @id @default(cuid())
+  date          DateTime        @default(now())
+  category      ExpenseCategory @default(OTHER)
+  amount        Float
+  description   String?
+  vendor        String?
+  truckId       String?
+  truck         Truck?          @relation(fields: [truckId], references: [id])
+  driverId      String?
+  driver        Driver?         @relation(fields: [driverId], references: [id])
+  loadId        String?
+  load          Load?           @relation(fields: [loadId], references: [id])
+  createdById   String?
+  createdByName String?
+  createdAt     DateTime        @default(now())
+
+  @@index([date])
+  @@index([category])
+}
+
+// Persisted, targetable notification (by user or by role). Complements the
+// live alerts computed from operational state.
+model Notification {
+  id        String    @id @default(cuid())
+  title     String
+  body      String?
+  href      String?
+  type      String    @default("info") // info | warning | success | danger
+  forUserId String?
+  forRole   String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([forUserId])
+  @@index([forRole])
 }

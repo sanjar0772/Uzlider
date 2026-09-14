@@ -47,9 +47,31 @@ export async function GET(req: Request) {
     });
   }
 
+  // Driver-attributed expenses in the same window become payroll deductions.
+  const expWhere: any = { driverId: { not: null } };
+  if (from || to) {
+    expWhere.date = {};
+    if (from) expWhere.date.gte = new Date(from);
+    if (to) expWhere.date.lte = new Date(to + "T23:59:59");
+  }
+  const expenses = await prisma.expense.findMany({ where: expWhere });
+  const dedByDriver: Record<string, number> = {};
+  for (const e of expenses) {
+    if (!e.driverId) continue;
+    dedByDriver[e.driverId] = (dedByDriver[e.driverId] ?? 0) + e.amount;
+  }
+
   const settlements = Object.values(byDriver)
-    .map((s) => ({ ...s, gross: Math.round(s.gross) }))
-    .sort((a, b) => b.gross - a.gross);
+    .map((s) => {
+      const deductions = Math.round(dedByDriver[s.driverId] ?? 0);
+      return {
+        ...s,
+        gross: Math.round(s.gross),
+        deductions,
+        net: Math.round(s.gross) - deductions,
+      };
+    })
+    .sort((a, b) => b.net - a.net);
 
   return NextResponse.json({ settlements });
 }

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Trash2, FileText, Send, CheckCircle2 } from "lucide-react";
+import { Plus, Trash2, FileText, Send, CheckCircle2, Printer } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
 import { useConfirm } from "@/components/Confirm";
 import { can, INVOICE_STATUS_COLORS } from "@/lib/constants";
 import { money2, fmtDate } from "@/lib/format";
+import { printInvoice } from "@/lib/pdf";
 import Modal from "@/components/Modal";
 import { PageHeader, EmptyState, TableSkeleton, StatCard } from "@/components/ui";
 
@@ -121,6 +122,7 @@ export default function InvoicesPage() {
                   {canManage && (
                     <td className="td">
                       <div className="flex justify-end gap-1">
+                        <button onClick={() => printInvoice(inv)} className="rounded p-1.5 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700" title={t("printInvoice")}><Printer size={15} /></button>
                         {inv.status === "DRAFT" && <button onClick={() => setStatus(inv, "SENT")} className="rounded p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-500/10" title={t("markSent")}><Send size={15} /></button>}
                         {inv.status !== "PAID" && <button onClick={() => setStatus(inv, "PAID")} className="rounded p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-500/10" title={t("markPaid")}><CheckCircle2 size={15} /></button>}
                         <button onClick={() => remove(inv)} className="rounded p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-500/10"><Trash2 size={15} /></button>
