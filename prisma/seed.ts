@@ -40,6 +40,26 @@ async function main() {
     }
   }
 
+  // One-shot admin recovery. When FORCE_ADMIN_RESET=true, ensure an OWNER exists
+  // with the ADMIN_EMAIL / ADMIN_PASSWORD credentials — creating the account if
+  // it's missing, or resetting its password and role if it already exists. This
+  // works even when the database already has users (unlike the seed below), so
+  // it's the way to regain access when the original admin credentials are lost.
+  // Set it once, redeploy, log in, then remove the variable.
+  if (process.env.FORCE_ADMIN_RESET === "true") {
+    const email = (process.env.ADMIN_EMAIL || "admin@uzlider.com").toLowerCase().trim();
+    const password = process.env.ADMIN_PASSWORD || "admin123";
+    const name = process.env.ADMIN_NAME || "Administrator";
+    const passwordHash = bcrypt.hashSync(password, 10);
+    await prisma.user.upsert({
+      where: { email },
+      update: { passwordHash, role: "OWNER" },
+      create: { name, email, passwordHash, role: "OWNER" },
+    });
+    console.log(`FORCE_ADMIN_RESET → owner ready: ${email} / ${password}`);
+    console.log("Remove FORCE_ADMIN_RESET and change this password after logging in.");
+  }
+
   const count = await prisma.user.count();
   if (count > 0) {
     console.log(`Seed skipped — database already has ${count} user(s).`);
