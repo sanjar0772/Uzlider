@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Plus, Pencil, Trash2, Truck as TruckIcon } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
@@ -112,7 +113,7 @@ export default function TrucksPage() {
                     <TruckIcon size={20} />
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-white">{x.unitNumber}</div>
+                    <Link href={`/dashboard/trucks/${x.id}`} className="font-semibold text-slate-900 hover:text-brand-600 hover:underline dark:text-white">{x.unitNumber}</Link>
                     <div className="text-xs text-slate-500">{[x.make, x.model].filter(Boolean).join(" ")} {x.year}</div>
                   </div>
                 </div>

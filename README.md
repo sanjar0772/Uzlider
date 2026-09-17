@@ -35,8 +35,14 @@ Trilingual interface: **English / Русский / O'zbekcha** (switch in the to
   next-service reminders that surface in notifications
 - **Driver settlements** — payroll per driver from delivered loads, less
   attributed expense deductions, with an expandable load breakdown
+- **360° records** — click any truck, driver or customer to open a full
+  profile: a truck's real tank-to-tank MPG, out-of-pocket cost-per-mile, net
+  contribution and its loads/fuel/maintenance/expenses; a driver's scorecard,
+  settlement, compliance and fuel; a customer's revenue, loads and AR aging
+- **CSV & statement export** — export expenses, fuel, IFTA and settlements to
+  CSV; print driver settlement and customer AR statements to PDF
 - **Documents** — upload BOL / POD / rate confirmations and more against a
-  load (stored inline, no external bucket needed); download or delete
+  load, driver, truck or customer (stored inline, no external bucket needed)
 - **Multi-stop loads** — add pickup/drop-off stops to any load and check
   them off as the driver progresses
 - **PDF documents** — one-click Rate confirmation, Dispatch sheet and

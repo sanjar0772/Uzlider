@@ -1052,10 +1052,10 @@ Object.assign(translations.en, {
   factoringRate: "Factoring rate (%)", saveSettings: "Save settings",
   costAssumptions: "Cost assumptions", settlements: "Settlements", settlement: "Settlement",
   grossPay: "Gross pay", period: "Period", thisWeek: "This week", driverPayTotal: "Driver pay",
-  factored: "Factored", aging: "Aging", d0_30: "0–30 days", d31_60: "31–60 days",
+  factored: "Factored", aging: "AR aging", notDue: "Not due", d0_30: "0–30 days", d31_60: "31–60 days",
   d60plus: "60+ days", needsAttention: "Needs attention", healthy: "Healthy",
   perTruck: "Per truck", profitByMonth: "Net profit by month", loadEconomics: "Load economics",
-  goodRate: "Good rate", lowRate: "Low rate", generate: "Generate", from: "From", to: "To",
+  goodRate: "Good rate", lowRate: "Low rate", generate: "Generate", from: "From", to: "To", exportCsv: "Export CSV",
 });
 Object.assign(translations.ru, {
   netProfit: "Чистая прибыль", profit: "Прибыль", rpm: "$/миля", loadedRpm: "Гружёный $/миля",
@@ -1075,10 +1075,10 @@ Object.assign(translations.ru, {
   factoringRate: "Факторинг (%)", saveSettings: "Сохранить",
   costAssumptions: "Параметры расходов", settlements: "Расчёты", settlement: "Расчёт",
   grossPay: "Начислено", period: "Период", thisWeek: "Эта неделя", driverPayTotal: "Оплата водителю",
-  factored: "Факторинг", aging: "По срокам", d0_30: "0–30 дней", d31_60: "31–60 дней",
+  factored: "Факторинг", aging: "Дебиторка по срокам", notDue: "Не наступил", d0_30: "0–30 дней", d31_60: "31–60 дней",
   d60plus: "60+ дней", needsAttention: "Требует внимания", healthy: "В норме",
   perTruck: "На тягач", profitByMonth: "Прибыль по месяцам", loadEconomics: "Экономика груза",
-  goodRate: "Хорошая ставка", lowRate: "Низкая ставка", generate: "Сформировать", from: "С", to: "По",
+  goodRate: "Хорошая ставка", lowRate: "Низкая ставка", generate: "Сформировать", from: "С", to: "По", exportCsv: "Экспорт CSV",
 });
 Object.assign(translations.uz, {
   netProfit: "Sof foyda", profit: "Foyda", rpm: "$/mil", loadedRpm: "Yukli $/mil",
@@ -1098,10 +1098,10 @@ Object.assign(translations.uz, {
   factoringRate: "Factoring stavkasi (%)", saveSettings: "Saqlash",
   costAssumptions: "Xarajat parametrlari", settlements: "Hisob-kitoblar", settlement: "Hisob-kitob",
   grossPay: "Jami haq", period: "Davr", thisWeek: "Shu hafta", driverPayTotal: "Haydovchi haqi",
-  factored: "Factoring", aging: "Muddat bo'yicha", d0_30: "0–30 kun", d31_60: "31–60 kun",
+  factored: "Factoring", aging: "Muddat bo'yicha qarz", notDue: "Muddati kelmagan", d0_30: "0–30 kun", d31_60: "31–60 kun",
   d60plus: "60+ kun", needsAttention: "E'tibor talab qiladi", healthy: "Yaxshi",
   perTruck: "Truck boshiga", profitByMonth: "Oylik sof foyda", loadEconomics: "Yuk iqtisodi",
-  goodRate: "Yaxshi narx", lowRate: "Past narx", generate: "Hisoblash", from: "Dan", to: "Gacha",
+  goodRate: "Yaxshi narx", lowRate: "Past narx", generate: "Hisoblash", from: "Dan", to: "Gacha", exportCsv: "CSV eksport",
 });
 
 // ---- Telegram integration keys ----

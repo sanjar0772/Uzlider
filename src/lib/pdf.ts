@@ -124,6 +124,77 @@ export function printDispatchSheet(load: AnyLoad, company = "Uzlider Trucking") 
   openPrintable(`Dispatch ${load.refNumber}`, body);
 }
 
+export function printSettlement(
+  driver: AnyLoad,
+  settlement: { grossPay: number; deductions: number; netPay: number },
+  loads: any[],
+  period: { from: string; to: string } | null,
+  company = "Uzlider Trucking"
+) {
+  const rows = (loads ?? [])
+    .filter((l) => l.status === "DELIVERED")
+    .map((l) => `<tr><td>${escapeHtml(l.refNumber)}</td><td>${escapeHtml(l.origin)} → ${escapeHtml(l.destination)}</td><td>${escapeHtml(l.deliveryDate ? fmtDate(l.deliveryDate) : "—")}</td><td class="num">${money2(l.driverPay ?? 0)}</td></tr>`)
+    .join("");
+  const body = `
+  ${header(company, "Settlement", driver.name)}
+  <div class="grid">
+    <div class="box"><h3>Driver</h3>
+      <div class="row big">${escapeHtml(driver.name)}</div>
+      <div class="row">${escapeHtml(driver.phone ?? "")}</div>
+    </div>
+    <div class="box"><h3>Pay period</h3>
+      <div class="row">${period ? `${escapeHtml(period.from)} → ${escapeHtml(period.to)}` : "All time"}</div>
+    </div>
+  </div>
+  <table><thead><tr><th>Load</th><th>Lane</th><th>Delivered</th><th class="num">Driver pay</th></tr></thead><tbody>${rows || `<tr><td colspan="4">No delivered loads in this period.</td></tr>`}</tbody></table>
+  <div class="totals">
+    <div class="row"><span>Gross pay</span><span>${money2(settlement.grossPay)}</span></div>
+    <div class="row"><span>Deductions</span><span>−${money2(settlement.deductions)}</span></div>
+    <div class="row grand"><span>Net pay</span><span>${money2(settlement.netPay)}</span></div>
+  </div>
+  <div class="sig"><div class="line">Driver signature / date</div><div class="line">Authorized by / date</div></div>`;
+  openPrintable(`Settlement ${driver.name}`, body);
+}
+
+export function printStatement(
+  customer: AnyLoad,
+  data: { loads: any[]; metrics: any; aging: any },
+  company = "Uzlider Trucking"
+) {
+  const invoiced = (data.loads ?? []).filter((l) => l.invoice);
+  const rows = invoiced
+    .map((l) => {
+      const inv = l.invoice;
+      return `<tr><td>${escapeHtml(inv.number)}</td><td>${escapeHtml(l.refNumber)}</td><td>${escapeHtml(inv.dueAt ? fmtDate(inv.dueAt) : "—")}</td><td>${escapeHtml(inv.status)}</td><td class="num">${money2(inv.amount)}</td></tr>`;
+    })
+    .join("");
+  const a = data.aging;
+  const body = `
+  ${header(company, "Statement", customer.name)}
+  <div class="grid">
+    <div class="box"><h3>Bill to</h3>
+      <div class="row big">${escapeHtml(customer.name)}</div>
+      ${customer.contact ? `<div class="row">${escapeHtml(customer.contact)}</div>` : ""}
+      ${customer.mcNumber ? `<div class="row">MC# ${escapeHtml(customer.mcNumber)}</div>` : ""}
+    </div>
+    <div class="box"><h3>Account summary</h3>
+      <div class="row">Revenue: ${money2(data.metrics.revenue)}</div>
+      <div class="row">Paid: ${money2(data.metrics.paid)}</div>
+      <div class="row big">Outstanding: ${money2(data.metrics.outstanding)}</div>
+    </div>
+  </div>
+  <table><thead><tr><th>Invoice</th><th>Load</th><th>Due</th><th>Status</th><th class="num">Amount</th></tr></thead><tbody>${rows || `<tr><td colspan="5">No invoices on file.</td></tr>`}</tbody></table>
+  <div class="totals">
+    <div class="row"><span>Current / not due</span><span>${money2(a.notDue)}</span></div>
+    <div class="row"><span>0–30 days</span><span>${money2(a.d0_30)}</span></div>
+    <div class="row"><span>31–60 days</span><span>${money2(a.d31_60)}</span></div>
+    <div class="row"><span>60+ days</span><span>${money2(a.d60plus)}</span></div>
+    <div class="row grand"><span>Total outstanding</span><span>${money2(data.metrics.outstanding)}</span></div>
+  </div>
+  <div class="note">Please remit outstanding balances. Contact us with any questions about this statement.</div>`;
+  openPrintable(`Statement ${customer.name}`, body);
+}
+
 export function printInvoice(invoice: AnyLoad, company = "Uzlider Trucking") {
   const load = invoice.load ?? {};
   const rows: string[] = [];

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Fuel as FuelIcon, Map } from "lucide-react";
+import { Plus, Pencil, Trash2, Fuel as FuelIcon, Map, Download } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
 import { useConfirm } from "@/components/Confirm";
@@ -9,6 +9,7 @@ import { can, US_STATES } from "@/lib/constants";
 import Modal from "@/components/Modal";
 import { PageHeader, EmptyState, Skeleton, StatCard } from "@/components/ui";
 import { money, money2, fmtDate, num } from "@/lib/format";
+import { exportCsv } from "@/lib/csv";
 
 const empty = {
   date: new Date().toISOString().slice(0, 10), gallons: "", pricePerGallon: "",
@@ -114,6 +115,15 @@ export default function FuelPage() {
   return (
     <div className="space-y-4">
       <PageHeader title={t("fuel")} subtitle={t("fuelLog")}>
+        {tab === "ifta" && ifta?.jurisdictions?.length > 0 ? (
+          <button onClick={() => exportCsv(`ifta-${ifta.year}-Q${ifta.quarter}`, ifta.jurisdictions)} className="btn-secondary"><Download size={16} /> {t("exportCsv")}</button>
+        ) : rows.length > 0 ? (
+          <button onClick={() => exportCsv("fuel", rows.map((x) => ({
+            date: x.date?.slice(0, 10), state: x.state ?? "", location: x.location ?? "",
+            gallons: x.gallons, pricePerGallon: x.pricePerGallon, total: x.total,
+            odometer: x.odometer ?? "", truck: x.truck?.unitNumber ?? "", driver: x.driver?.name ?? "",
+          })))} className="btn-secondary"><Download size={16} /> {t("exportCsv")}</button>
+        ) : null}
         {canManage && <button onClick={openCreate} className="btn-primary"><Plus size={16} /> {t("newFuel")}</button>}
       </PageHeader>
 

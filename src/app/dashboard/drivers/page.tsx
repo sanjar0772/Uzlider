@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Plus, Phone, Truck as TruckIcon, Pencil, Trash2, Users } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
@@ -109,7 +110,7 @@ export default function DriversPage() {
                     {d.name.charAt(0)}
                   </div>
                   <div>
-                    <div className="font-semibold text-slate-900 dark:text-white">{d.name}</div>
+                    <Link href={`/dashboard/drivers/${d.id}`} className="font-semibold text-slate-900 hover:text-brand-600 hover:underline dark:text-white">{d.name}</Link>
                     {d.phone && <div className="flex items-center gap-1 text-xs text-slate-500"><Phone size={11} /> {d.phone}</div>}
                   </div>
                 </div>

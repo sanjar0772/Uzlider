@@ -157,7 +157,8 @@ model Customer {
   notes     String?
   createdAt DateTime @default(now())
 
-  loads Load[]
+  loads     Load[]
+  documents Document[]
 }
 
 model Load {
@@ -327,6 +328,8 @@ model Document {
   driver         Driver?     @relation(fields: [driverId], references: [id], onDelete: Cascade)
   truckId        String?
   truck          Truck?      @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  customerId     String?
+  customer       Customer?   @relation(fields: [customerId], references: [id], onDelete: Cascade)
   uploadedById   String?
   uploadedByName String?
   createdAt      DateTime    @default(now())
@@ -334,6 +337,7 @@ model Document {
   @@index([loadId])
   @@index([driverId])
   @@index([truckId])
+  @@index([customerId])
 }
 
 // Fuel purchase — feeds fuel-cost analytics and per-state IFTA reporting.

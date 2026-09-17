@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Plus, Pencil, Trash2, Receipt } from "lucide-react";
+import { Plus, Pencil, Trash2, Receipt, Download } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
 import { useConfirm } from "@/components/Confirm";
@@ -9,6 +9,7 @@ import { can, EXPENSE_CATEGORIES, EXPENSE_CATEGORY_COLORS } from "@/lib/constant
 import Modal from "@/components/Modal";
 import { PageHeader, EmptyState, Skeleton, StatCard } from "@/components/ui";
 import { money } from "@/lib/format";
+import { exportCsv } from "@/lib/csv";
 
 const empty = {
   date: new Date().toISOString().slice(0, 10),
@@ -104,6 +105,13 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-4">
       <PageHeader title={t("expenses")} subtitle={`${rows.length} ${t("total").toLowerCase()}`}>
+        {rows.length > 0 && (
+          <button onClick={() => exportCsv("expenses", rows.map((x) => ({
+            date: x.date?.slice(0, 10), category: x.category, amount: x.amount,
+            vendor: x.vendor ?? "", description: x.description ?? "",
+            truck: x.truck?.unitNumber ?? "", driver: x.driver?.name ?? "",
+          })))} className="btn-secondary"><Download size={16} /> {t("exportCsv")}</button>
+        )}
         {canManage && <button onClick={openCreate} className="btn-primary"><Plus size={16} /> {t("newExpense")}</button>}
       </PageHeader>
 

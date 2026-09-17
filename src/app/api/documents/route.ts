@@ -18,17 +18,19 @@ export async function GET(req: Request) {
   const loadId = searchParams.get("loadId");
   const driverId = searchParams.get("driverId");
   const truckId = searchParams.get("truckId");
+  const customerId = searchParams.get("customerId");
   const where: any = {};
   if (loadId) where.loadId = loadId;
   else if (driverId) where.driverId = driverId;
   else if (truckId) where.truckId = truckId;
+  else if (customerId) where.customerId = customerId;
   else return NextResponse.json({ documents: [] });
 
   const documents = await prisma.document.findMany({
     where,
     select: {
       id: true, name: true, category: true, mimeType: true, size: true,
-      uploadedByName: true, createdAt: true, loadId: true, driverId: true, truckId: true,
+      uploadedByName: true, createdAt: true, loadId: true, driverId: true, truckId: true, customerId: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -50,7 +52,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "File too large (max 6 MB)" }, { status: 413 });
   if (body.category && !isDocCategory(body.category))
     return NextResponse.json({ error: "Invalid category" }, { status: 400 });
-  if (!body.loadId && !body.driverId && !body.truckId)
+  if (!body.loadId && !body.driverId && !body.truckId && !body.customerId)
     return NextResponse.json({ error: "No owner" }, { status: 400 });
 
   const document = await prisma.document.create({
@@ -63,6 +65,7 @@ export async function POST(req: Request) {
       loadId: body.loadId || null,
       driverId: body.driverId || null,
       truckId: body.truckId || null,
+      customerId: body.customerId || null,
       uploadedById: session.id,
       uploadedByName: session.name,
     },

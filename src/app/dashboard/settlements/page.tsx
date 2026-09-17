@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Wallet, ChevronDown, ChevronRight, Users } from "lucide-react";
+import { Wallet, ChevronDown, ChevronRight, Users, Download } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { PageHeader, StatCard, Skeleton, EmptyState } from "@/components/ui";
 import { money } from "@/lib/format";
+import { exportCsv } from "@/lib/csv";
 
 function monthStart() {
   const d = new Date();
@@ -34,7 +35,14 @@ export default function SettlementsPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title={t("driverSettlements")} subtitle={t("settlementHint")} />
+      <PageHeader title={t("driverSettlements")} subtitle={t("settlementHint")}>
+        {rows.length > 0 && (
+          <button onClick={() => exportCsv(`settlements-${from}_${to}`, rows.map((s) => ({
+            driver: s.name, loads: s.count, gross: s.gross,
+            deductions: s.deductions ?? 0, net: s.net ?? s.gross,
+          })))} className="btn-secondary"><Download size={16} /> {t("exportCsv")}</button>
+        )}
+      </PageHeader>
 
       <div className="card flex flex-wrap items-end gap-3 p-4">
         <div><label className="label">{t("from")}</label><input type="date" className="input !w-auto" value={from} onChange={(e) => setFrom(e.target.value)} /></div>

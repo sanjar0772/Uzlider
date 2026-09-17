@@ -8,7 +8,7 @@ import { useConfirm } from "@/components/Confirm";
 import { DOC_CATEGORIES, DOC_CATEGORY_COLORS } from "@/lib/constants";
 import { fmtDate } from "@/lib/format";
 
-type Owner = { loadId?: string; driverId?: string; truckId?: string };
+type Owner = { loadId?: string; driverId?: string; truckId?: string; customerId?: string };
 
 function fmtSize(bytes: number) {
   if (!bytes) return "";
@@ -38,7 +38,8 @@ export default function DocumentsPanel({
   const query =
     owner.loadId ? `loadId=${owner.loadId}` :
     owner.driverId ? `driverId=${owner.driverId}` :
-    owner.truckId ? `truckId=${owner.truckId}` : "";
+    owner.truckId ? `truckId=${owner.truckId}` :
+    owner.customerId ? `customerId=${owner.customerId}` : "";
 
   const load = useCallback(async () => {
     if (!query) return;

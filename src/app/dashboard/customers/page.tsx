@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Link from "next/link";
 import { Plus, Pencil, Trash2, Building2, Phone, Mail } from "lucide-react";
 import { useI18n } from "@/lib/i18n";
 import { useToast } from "@/components/Toast";
@@ -84,7 +85,7 @@ export default function CustomersPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {customers.map((c) => (
                 <tr key={c.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                  <td className="td font-medium text-slate-900 dark:text-white">{c.name}</td>
+                  <td className="td font-medium"><Link href={`/dashboard/customers/${c.id}`} className="text-slate-900 hover:text-brand-600 hover:underline dark:text-white">{c.name}</Link></td>
                   <td className="td">{c.contact ?? "—"}</td>
                   <td className="td">{c.phone ?? "—"}</td>
                   <td className="td">{c.mcNumber ?? "—"}</td>
